@@ -1,0 +1,81 @@
+#include "Polynomial.h"
+
+Polynomial::Polynomial(int degree_ = 0){
+	n = degree_ + 1;
+	coefs = new double[n];
+}
+
+Polynomial::Polynomial(double &constant){
+	n = 1;
+	coefs = new double[1];
+
+	coefs[0] = constant;
+}
+
+double Polynomial::evaluate(double x){
+	int i;
+	double value = 0;
+
+	for(i = n - 1; i >= 0; --i){
+		value *= x;
+		value += coefs[i];
+	}
+
+	return value;
+}
+
+void Polynomial::derivate(){
+	for(int i = 1; i < n; ++i)
+		coefs[i - 1] = coefs[i] * i;
+	
+	coefs[n - 1] = 0;
+}
+
+void Polynomial::solve(){
+
+}
+
+int Polynomial::degree(){
+	for(int i = n - 1; i >= 0; --i)
+		if(coefs[i] != 0)
+			return i;
+	
+	return -1;
+}
+
+Polynomial &Polynomial::operator+=(Polynomial &p){
+	setSize(n > p.n ? n : p.n - 1);
+
+	for(int i = 0; i < n; ++i)
+		coefs[i] += p[i];
+	
+	return *this;
+}
+
+Polynomial &Polynomial::operator-=(Polynomial &p){
+	setSize(n > p.n ? n : p.n);
+
+	for(int i = 0; i < n; ++i)
+		coefs[i] -= p[i];
+	
+	return *this;
+	
+}
+
+Polynomial &Polynomial::operator-(){
+	for(int i = 0; i < n; ++i)
+		coefs[i] = -coefs[i];
+}
+
+Polynomial &Polynomial::operator*=(Polynomial &p){
+	double *tmp = new double[n + p.n - 1];
+
+	for(int i = 0; i < n; ++i)
+		for(int j = 0; j < p,n; ++j){
+			tmp[i + j] = coefs[i] * p.coefs[j];
+		}
+	
+	n += p.n - 1;
+	delete[] coefs;
+	coefs = tmp;
+}
