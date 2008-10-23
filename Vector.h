@@ -5,6 +5,7 @@
 #include "Transformation.h"
 
 /// A column vector.
+/// Coordinates are accesible both by names and by index (vect.x and vect[0])
 union Vector{
 public:
 	struct{
@@ -14,9 +15,9 @@ private:
 	double data[3];
 public:
 
-	Vector() x(0), y(0), z(0) {}
+	Vector() : x(0), y(0), z(0) {}
 
-	Vector(double x_, double y_, double z_) x(x_), y(y_), z(z_){}
+	Vector(double x_, double y_, double z_) : x(x_), y(y_), z(z_){}
 
 	inline double &operator[](int dimension){
 		return data[dimension];
@@ -51,9 +52,8 @@ public:
 		return (*this) *= inv;
 	}
 
-	/// Normalizes the vector using the w component.
 	inline void normalize(){
-		(*this) *= 1 / sqrt(x * x + y * y + z * z);
+		(*this) *= 1 / abs(*this);
 	}
 	
 	void transform(const Transformation *t){
@@ -81,11 +81,6 @@ inline Vector operator-(const Vector &a, const Vector &b){
 	return tmp;
 }
 
-/// Dot product.
-inline double operator*(const Vector &a, const Vector &b){
-	return (a.x * b.x + a.y * b.y +  a.z * b.z) / (a.w * b.w);
-}
-
 inline Vector operator*(const Vector &a, double d){
 	Vector tmp(a);
 	tmp *= d;
@@ -103,8 +98,19 @@ inline double abspow2(const Vector &v){
 }
 
 inline double abs(const Vector &v){
-	return sqrt(v.x * v.x + v.y * v.y +  v.z * v.z) / v.w;
+	return sqrt(v.x * v.x + v.y * v.y +  v.z * v.z);
 }
+
+/// Dot product.
+inline double dot_product(const Vector &a, const Vector &b){
+	return (a.x * b.x + a.y * b.y +  a.z * b.z);
+}
+
+/// Angle in radians between two vectors.
+double angle_between(const Vector &a, const Vector &b){
+	return acos(dot_product(a, b) / sqrt(abspow2(a) * abspow2(b));
+}
+
 
 typedef Vector Point;
 
