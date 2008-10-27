@@ -5,8 +5,8 @@ LDFLAGS += -Wall
 ofiles = BoundingBox.o Container.o Cube.o Cylinder.o Sphere.o \
 	Polynomial.o Pixmap.o Transformation.o
 
-client_ofiles = $(ofiles) client.o
-server_ofiles = $(ofiles) server.o
+client_ofiles = client.o #$(ofiles)
+server_ofiles = server.o #$(ofiles)
 
 .PHONY: all
 all: client server

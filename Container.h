@@ -2,7 +2,6 @@
 #define CONTAINER_H
 
 #include "Object.h"
-#include "Instance.h"
 
 /// Container object.
 /// Uses KD-tree to store the subnodes.
@@ -48,10 +47,10 @@ private:
 	};
 
 	enum Axis{
-		NONE = -1.
-		X,
-		Y,
-		Z,
+		NONE = 0xDEADBEEF, // why not :-)
+		X = 0,
+		Y = 1,
+		Z = 2,
 	};
 
 	/// The KD-tree node.
@@ -68,12 +67,12 @@ private:
 
 	};
 
-	Surface *get_surface(const Point *p, const Ray *r) const;
+	Surface *get_surface(const Point3D *p, const Ray *r) const;
 
 	Intersection *get_limited_instersection(KDTree *t, const Ray *r, Renderer *rend, double tMin, double tMax) const;
 	Intersection *get_all_instersections(KDTree *t, const Ray *r, Renderer *rend, double tMin, double tMax) const;
 
-	void check_split_planes(Point *pt, Instance *list, double *bestSplit, double *bestAxis, int *bestBalance);
+	void check_split_planes(Point3D *pt, Instance *list, double *bestSplit, double *bestAxis, int *bestBalance);
 
 	void delete_tree(KDTree *t, Instance **keepInstances);
 	KDTree *build_tree(Instance *i, BoundingBox *box, unsigned int count);

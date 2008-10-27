@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "Vector.h"
+#include "Vector3D.h"
 
 /// Stores a ray with origin and direction.
 /// The direction is kept normalized. If the
@@ -9,13 +9,13 @@
 class Ray{
 public:
 	Ray() : origin(), direction() {}
-	Ray(Point &o, Vector &d) : origin(o), direction(d) {
-		fixIt();
+	Ray(Point3D &o, Vector3D &d) : origin(o), direction(d) {
+		fix_it();
 	}
 
-	Point origin;
-	Vector direction;
-	Vector invDirection;
+	Point3D origin;
+	Vector3D direction;
+	Vector3D invDirection;
 
 	/// Normalize the direction vector and
 	/// computes the inverse direction vector.
@@ -26,15 +26,14 @@ public:
 		invDirection.x = 1 / direction.x;
 		invDirection.y = 1 / direction.y;
 		invDirection.z = 1 / direction.z;
-		invDirection.w = 1 / direction.w;
 
 		return ret;
 	}
 
 	/// Transforms a ray.
 	/// \return The lenght of the transformed ray before normalization. This is useful
-	/// for transforming intersections back.
-	double transform(Transformation &t){
+	/// for transforming intersections back from the object space to the container space.
+	double transform(Transformation *t){
 		origin.transform(t);
 		direction.transform(t);
 		/*
@@ -46,20 +45,15 @@ public:
 		return fix_it();
 	}
 
-	Ray &operator+=(Vector &v){
+	Ray &operator+=(Vector3D &v){
 		origin += v;
 		return *this;
 	}
 
-	Ray &operator-=(Vector &v){
+	Ray &operator-=(Vector3D &v){
 		origin -= v;
 		return *this;
 	}
 };
-
-/// Makes a ray from a to b.
-Ray operator->(Vector &a, Vector &b){
-	return Ray(a, b - a);
-}
 
 #endif

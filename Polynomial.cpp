@@ -1,7 +1,7 @@
 #include "Polynomial.h"
 
-Polynomial::Polynomial(int degree_ = 0){
-	n = degree_ + 1;
+Polynomial::Polynomial(int degree = 0){
+	n = degree + 1;
 	coefs = new double[n];
 }
 
@@ -13,10 +13,9 @@ Polynomial::Polynomial(double &constant){
 }
 
 double Polynomial::evaluate(double x){
-	int i;
 	double value = 0;
 
-	for(i = n - 1; i >= 0; --i){
+	for(int i = n - 1; i >= 0; --i){
 		value *= x;
 		value += coefs[i];
 	}

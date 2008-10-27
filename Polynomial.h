@@ -3,11 +3,11 @@
 
 class Polynomial{
 public:
-	Polynomial(int degree_ = 0);
-	Polynomial(double &constant);
+	Polynomial(int degree = 0);
+	Polynomial(double constant);
 	Polynomial(Polynomial &p);
 
-	void setSize(int degree_)
+	void setSize(int degree);
 
 	double operator()(double x){
 		return evaluate(x);

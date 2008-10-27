@@ -10,7 +10,7 @@ class Transformation{
 	void add_transformation(const Transformation &t);
 
 	Transformation &operator*=(const Transformation &t){
-		add_transformation(t)
+		add_transformation(t);
 	}
 
 	inline double operator[](int i) const{
@@ -22,6 +22,8 @@ private:
 	double matrix[16];
 
 	void multiply(Transformation a, Transformation b, double *out);
+
+	friend union Vector3D;
 };
 
 #endif

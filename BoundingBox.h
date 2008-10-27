@@ -1,27 +1,29 @@
 #ifndef BOUNDINGBOX_H
 #define BOUNDINGBOX_H
 
-#include "Vector.h"
+#include "Vector3D.h"
 #include "Ray.h"
 #include "Transformation.h"
+
+#include <math.h>
 
 class Cube;
 class Container;
 
 class BoundingBox{
-	BoundingBox() : a(INF, INF, INF), b(-INF, -INF, -INF) {}
+	BoundingBox() : a(INFINITY, INFINITY, INFINITY), b(-INFINITY, -INFINITY, -INFINITY) {}
 	
 	/// Left, top and close corner of the box.
 	/// (a.x < b.x && a.y < b.y && a.z < b.z if a and b are dehomogenized).
-	Point a;
+	Point3D a;
 
 	/// Right, bottom and far corner of the box.
 	/// (a.x < b.x && a.y < b.y && a.z < b.z if a and b are dehomogenized).
-	Point b;
+	Point3D b;
 
-	bool has_intersection(Ray &r);
+	bool has_intersection(Ray *r);
 
-	void enlarge(BoundingBox &inner);
+	void enlarge(BoundingBox *inner);
 
 	double surface();
 	

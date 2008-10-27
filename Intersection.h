@@ -1,6 +1,9 @@
 #ifndef INTERSECTION_H
 #define INTERSECTION_H
 
+#include "Object.h"
+#include "Ray.h"
+
 /// A class representing a intersection of a ray with the object.
 /// Intersections are allocated in a pool contained in a renderer.
 /// To avoid overloaded new and delete the Renderer::new_intersection()
@@ -29,7 +32,7 @@ public:
 	Object *o;
 
 	/// This is the coordinate in the o's space.
-	Point coord;
+	Point3D coord;
 
 	/// Distance along the ray. It's first filled in the o's space and then is
 	/// transformed back to the camera's space.

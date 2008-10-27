@@ -15,9 +15,10 @@
 /// \note Prepending is a tiny bit slower than appending (but still in constant time).
 template<class T>
 class LList{
+public:
 	LList() : a(0), b(&a) {}
 
-	LList(T *first) a(first){
+	LList(T *first) : a(first){
 		find_last();
 	}
 
@@ -29,14 +30,14 @@ class LList{
 		return *this;
 	}
 
-	T *operator T* (){
+	operator T* (){
 		return a;
 	}
 	
 	LList<T> append(LList<T> l);
 	LList<T> append_single(T *i);
 	LList<T> prepend(LList<T> l);
-	LList<T> prepend_single(T *i)
+	LList<T> prepend_single(T *i);
 
 	void delete_list();
 private:
