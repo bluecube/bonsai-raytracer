@@ -26,6 +26,7 @@ void usage(char *name){
 	printf("Usage: %s [OPTIONS] INPUT_FILE\n", name);
 	printf("Render a scene from FILE.\n\n");
 
+	printf("Processing options\n");
 	printf("\t-g, --granularity=NUMBER\n");
 	printf("\t\tGranularity of the rendering -- how many chunks does each\n");
 	printf("\t\tthread of a rendering server have to render on average.\n");
@@ -34,12 +35,13 @@ void usage(char *name){
 	printf("\t\tThis help.\n");
 	printf("\t-o, --output=FILE\n");
 	printf("\t\tSave output file at this location. Defaults to INPUT_FILE%s\n", DEFAULT_EXTENSION);
-	printf("\t-r, --resolution=WIDTH\n");
-	printf("\t\tOutput resolution. Height is calculated from the aspect ratio in\n");
-	printf("\t\tthe input file. Default width is %i.\n", DEFAULT_W);
 	printf("\t-s, --server=SERVER[:PORT][,SERVER[:PORT]...]\n");
 	printf("\t\tRendering server(s) to connect to.\n");
 	printf("\t\tIf port is ommited use the default %i.\n", DEFAULT_PORT);
+
+	printf("\t-r, --resolution=WIDTH\n");
+	printf("\t\tOutput resolution. Height is calculated from the aspect ratio in\n");
+	printf("\t\tthe input file. Default width is %i.\n", DEFAULT_W);
 }
 
 int main(int argc, char **argv){
@@ -98,7 +100,7 @@ int main(int argc, char **argv){
 		}
 	}
 
-	unsigned int chunkCount = 0;
+	unsigned int threadCount = 0;
 	unsigned int serverCount = 0;
 	
 	RenderServer *rs = servers;
@@ -108,7 +110,7 @@ int main(int argc, char **argv){
 			break;
 		}
 
-		chunkCount += rs -> get_thread_count();
+		threadCount += rs -> get_thread_count();
 		++serverCount;
 
 		rs = rs -> next;
@@ -119,8 +121,6 @@ int main(int argc, char **argv){
 		servers.delete_list();
 		return 1;
 	}
-
-	chunkCount *= granularity;
 
 	if(optind >= argc){
 		printf("An input file must be specified.\n");
@@ -138,14 +138,13 @@ int main(int argc, char **argv){
 	Scene scene(argv[optind]);
 	unsigned int height = width / scene.get_aspect_ratio();
 
-	unsigned int chunksX, chunksY;
+	unsigned int chunksX = 1;
+	unsigned int chunksY = 1;
 
 	if(width > height){
-		chunksY = (unsigned int)sqrt(chunkCount / scene.get_aspect_ratio());
-		chunksX = (unsigned int)ceil(chunkCount / (double)chunksY);
+		chunksX = chunks * granularity;
 	}else{
-		chunksX = (unsigned int)sqrt(chunkCount * scene.get_aspect_ratio());
-		chunksY = (unsigned int)ceil(chunkCount / (double)chunksX);
+		chunksY = chunks * granularity;
 	}
 
 	
