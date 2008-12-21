@@ -8,8 +8,8 @@ class Sphere : public Object{
 public:
 	Sphere() : bbox(Point(-1., -1., -1.), Point(1., 1., 1.)) {};
 
-	Intersection *trace(const Ray *r, Renderer *rend) const;
-	Intersection *trace_limited(const Ray *r, Renderer *rend) const;
+	LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
+	void trace_limited(const Ray *r, Intersection *ret, Renderer *rend) const = 0;
 private:
 	Surface *get_surface(const Point *p, Ray *r) const;
 	double intersections[2];

@@ -16,8 +16,12 @@ public:
 	/// Finds all intersections between the ray and the object.
 	virtual LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
 
-	/// Finds the first intersection between the ray and the object.
-	virtual LList<Intersection> trace_limited(const Ray *r, Renderer *rend) const = 0;
+	/// Finds the first positive intersection between the ray and the object.
+	/// \return Distance of first positive intersection, or INFINITY there isn't any.
+	virtual double trace_limited(const Ray *r, Renderer *rend) const = 0;
+
+	/// Find out if the point is inside the object
+	virtual bool is_inside(const Point3D *p) const = 0;
 
 	/// Returns the bounding box of the object.
 	/// The bounding box of the object _must_ be checked before calling

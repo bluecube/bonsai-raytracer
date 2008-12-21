@@ -24,7 +24,8 @@ public:
 	Container(Mode m = OR);
 	~Container();
 
-	Intersection *trace(const Ray *r, Renderer *rend, bool limit) const;
+	virtual LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
+	virtual void trace_limited(const Ray *r, Intersection *ret, Renderer *rend) const = 0;
 
 	void rebuild();
 

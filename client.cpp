@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 const unsigned long DEFAULT_PORT = 91823;
 const unsigned int DEFAULT_GRANULARITY = 8;
@@ -13,14 +14,25 @@ const unsigned int DEFAULT_W = 1024;
 
 const char *DEFAULT_EXTENSION = ".hdr";
 
-class RenderServer{
+/// A class representing a connection to the render server.
+class RenderServerConnection{
 public:
-	RenderServer(char *addr){
+	RenderServerConnection(char *addr){
 		printf("server %s\n", addr);
 	}
 
-	RenderServer *next;
+	unsigned getAvailableThreadCount(){
+		return 1;
+	}
 };
+
+class Chunk{
+	public:
+	double finished; /// < What part of this chunk is finished.
+
+	std::list<RenderServerConnection>::const_iterator assignedTo;
+	unsigned chunkX, chunkY;
+}
 
 void usage(char *name){
 	printf("Usage: %s [OPTIONS] INPUT_FILE\n", name);
@@ -53,7 +65,62 @@ int main(int argc, char **argv){
 
 	printf("Bonsai rayracer client\n");
 
-	LList<RenderServer> servers;
+	std::vector<RenderServer> servers;
+#include "Scene.h"
+
+#include "LList.h"
+
+#include <getopt.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+const unsigned long DEFAULT_PORT = 91823;
+const unsigned int DEFAULT_GRANULARITY = 8;
+const unsigned int DEFAULT_W = 1024;
+
+const char *DEFAULT_EXTENSION = ".hdr";
+
+class Chunk{
+	public:
+	double finished; /// < What part of this chunk is finished.
+
+	std::list<RenderServerConnection>::const_iterator assignedTo;
+	unsigned chunkX, chunkY;
+}
+
+void usage(char *name){
+	printf("Usage: %s [OPTIONS] INPUT_FILE\n", name);
+	printf("Render a scene from FILE.\n\n");
+
+	printf("Processing options\n");
+	printf("\t-g, --granularity=NUMBER\n");
+	printf("\t\tGranularity of the rendering -- how many chunks does each\n");
+	printf("\t\tthread of a rendering server have to render on average.\n");
+	printf("\t\tDefault value is %i.\n", DEFAULT_GRANULARITY);
+	printf("\t-h, --help\n");
+	printf("\t\tThis help.\n");
+	printf("\t-o, --output=FILE\n");
+	printf("\t\tSave output file at this location. Defaults to INPUT_FILE%s\n", DEFAULT_EXTENSION);
+	printf("\t-s, --server=SERVER[:PORT][,SERVER[:PORT]...]\n");
+	printf("\t\tRendering server(s) to connect to.\n");
+	printf("\t\tIf port is ommited use the default %i.\n", DEFAULT_PORT);
+
+	printf("\t-r, --resolution=WIDTH\n");
+	printf("\t\tOutput resolution. Height is calculated from the aspect ratio in\n");
+	printf("\t\tthe input file. Default width is %i.\n", DEFAULT_W);
+}
+
+int main(int argc, char **argv){
+	char *outputFile = 0;
+	bool usedDefaultOutputFile = false;
+	unsigned int width = DEFAULT_W;
+	unsigned int granularity = DEFAULT_GRANULARITY;
+
+	RenderDispatcher dispatcher;
+
+	printf("Bonsai rayracer client\n");
+
 
 	while(1){
 		int opt;
@@ -78,12 +145,12 @@ int main(int argc, char **argv){
 			while(*optarg){
 				if(*optarg == ','){
 					*optarg = '\0';
-					servers.append_single(new RenderServer(tmp));
+					dispatcher.addConnection(new RenderServerConnection(tmp));
 					tmp = optarg + 1;
 				}
 				++optarg;
 			}
-			servers.append_single(new RenderServer(tmp));
+			dispatcher.addConnection(new RenderServerConnection(tmp));
 			break;
 		case 'g':
 			granularity = atoi(optarg);
@@ -100,25 +167,8 @@ int main(int argc, char **argv){
 		}
 	}
 
-	unsigned int threadCount = 0;
-	unsigned int serverCount = 0;
-	
-	RenderServer *rs = servers;
-	while(rs){
-		if(!(rs -> connect())){
-			rs = rs -> next;
-			break;
-		}
-
-		threadCount += rs -> get_thread_count();
-		++serverCount;
-
-		rs = rs -> next;
-	}
-
-	if(!serverCount){
-		printf("We need at least one render server.\n");
-		servers.delete_list();
+	if(!dispatcher.get_available_threads()){
+		printf("We need at least one render server and one render thread.\n");
 		return 1;
 	}
 
@@ -135,23 +185,30 @@ int main(int argc, char **argv){
 		usedDefaultOutputFile = true;
 	}
 
+	granularity *= dispatcher.get_available_threads();
+
 	Scene scene(argv[optind]);
-	unsigned int height = width / scene.get_aspect_ratio();
+	unsigned height = width / scene.get_aspect_ratio();
 
-	unsigned int chunksX = 1;
-	unsigned int chunksY = 1;
+	unsigned chunksX = 1 + (int)sqrt(granularity * scene.get_aspect_ratio());
+	unsigned chunksY = 1 + granularity / chunksX;
+	granularity = chunksX * chunksY;
 
-	if(width > height){
-		chunksX = chunks * granularity;
-	}else{
-		chunksY = chunks * granularity;
+	dispatcher.set_scene(&scene);
+	dispatcher.set_pixmap()
+	dispatcher.set_chunks(chunksX, chunksY);
+
+	printf("Starting rendering\n"):
+	dispatcher.go();
+
+	while(!dispatcher.finished()){
+		sleep(5);
+		printf("%.2f%%; %u of %u waiting\n",
+		       100 * dispatcher.get_progress(), dispatcher.get_waiting_chunks(), granularity);
 	}
-
-	
 
 	if(usedDefaultOutputFile)
 		delete outputFile;
 	
-	servers.delete_list();
 	return 0;
 }
