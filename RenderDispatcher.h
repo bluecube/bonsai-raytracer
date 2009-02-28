@@ -7,6 +7,7 @@
 #include "Pixmap.h"
 
 #include <vector>
+#include <pthread.h>
 
 class RenderDispatcher{
 public:
@@ -43,10 +44,15 @@ public:
 	void set_scene(Scene *sc){
 		scene = sc;
 	}
+
 	void set_pixmap(Pixmap *p){
 		pixmap = p;
 	}
+
+	void wait_for_update();
 private:
+	pthread_cond_t updated;
+
 	bool one_chunk(RenderServerConnection *con);
 
 	std::vector<RenderServerConnection *> connections;

@@ -1,6 +1,7 @@
 #include "Cylinder.h"
 
-IntersectionList Cylinder::trace(const Ray &r) const{
+LList<Intersection> Cylinder::trace(const Ray *r, Renderer *rend) const{
+	LList<Intersection> ret;
 	if(r.invDirection.z >= 0){
 		intersection[0] = (-1. - r.origin.z) * r.invDirection.z;
 		intersection[1] = ( 1. - r.origin.z) * r.invDirection.z;
@@ -13,7 +14,7 @@ IntersectionList Cylinder::trace(const Ray &r) const{
 	double D = dotproduct * dotproduct - r.origin.x * r.origin.x - r.origin.z * r.origin.z + 1;
 
 	if(d < 0)
-		return IntersectionList(0, 0);
+		return ret;
 	else{
 		D = sqrt(D);
 		double t;
@@ -29,5 +30,7 @@ IntersectionList Cylinder::trace(const Ray &r) const{
 			return IntersectionList(intersection, 2);
 		else
 			return IntersectionList(0, 0);
+
+		return ret;
 	}
 }

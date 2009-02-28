@@ -8,10 +8,8 @@ class Cube : public Object{
 public:
 	Cube();
 
-	LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
-	void trace_limited(const Ray *r, Intersection *ret, Renderer *rend) const = 0;
-private:
-	virtual Surface *get_surface(const Point *p, const Ray *r) const = 0;
+	LList<Intersection> trace(const Ray *r, Renderer *rend) const;
+	bool trace_limited(const Ray *r, Intersection *ret, Renderer *rend, Intersection * out) const;
 };
 
 #endif

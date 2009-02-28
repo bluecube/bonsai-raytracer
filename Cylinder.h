@@ -8,8 +8,8 @@ class Cylinder : public Object{
 public:
 	Cylinder() : bbox(Point(-1., -1., -1.), Point(1., 1., 1.));
 
-	IntersectionList trace(const Ray &r) const;
-	Surface &get_surface(const Point &p) const;
+	LList<Intersection> trace(const Ray *r, Renderer *rend) const;
+	bool trace_limited(const Ray *r, Intersection *ret, Renderer *rend, Intersection *out) const;
 private:
 	double intersections[2];
 };

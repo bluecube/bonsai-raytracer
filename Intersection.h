@@ -10,19 +10,23 @@
 /// is used.
 class Intersection{
 public:
-	/// Construct the intersection inside the Object::trace() method.
+	/// Create the intersection with set parameters.
+	/// \see edit().
+	Intersection(Object *obj, Ray *ray, double dist);
+
+	/// Edit the intersection properties.
 	/// \arg obj Object that was hit -- it may be later changed if the
 	/// object is in a container that overides the surface.
 	/// \arg r Ray that this intersection is on. Transformed to the
 	/// obj's space.
-	/// \arg dist Distance from the origin of the ray (in o's space).
-	Intersection(Object *obj, Ray *ray, double dist);
+	/// \arg dist Distance from the origin of the ray (in obj's space).
+	void edit(Object *obj, Ray *ray, double dist);
 
 	Surface &get_surface(){
 		return o -> get_surface(p, r);
 	}
 
-	inline double get_distance(){
+	double get_distance(){
 		return distance;
 	}
 

@@ -2,38 +2,25 @@
 #define CONTAINER_H
 
 #include "Object.h"
+#include "LList.h"
 
 /// Container object.
-/// Uses KD-tree to store the subnodes.
-/// Works in a few different CSG modes, these are set with set_mode().
+/// Does the logical OR on objects it contains.
+/// Uses KD-tree to store them.
 /// \todo Should lights be also stored in containers?
 /// (a car with headlights on should be transformed all at once ...)
 class Container : public Object{
 public:
-	/// Container mode enum.
-	enum Mode{
-		OR, /// < Container represents the union of objects.
-		AND, /// < Container represents the intersection of objects.
-		NOT_OR, /// < Container represents the negation of union of objects.
-		DIFF, /// < Container represents the difference of objects.
-		      /// < In this mode only two objects can be in the container.
-		      /// < For use in this mode, use add_positive() and add_negative()
-		      /// < instead of add().
-	};
-
-	Container(Mode m = OR);
+	Container();
 	~Container();
 
-	virtual LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
-	virtual void trace_limited(const Ray *r, Intersection *ret, Renderer *rend) const = 0;
+	LList<Intersection> trace(const Ray *r, Renderer *rend) const;
+	bool trace_limited(const Ray *r, Intersection *ret, Renderer *rend, Intersection * out) const;
 
 	void rebuild();
 
 	void add(Object *o, Transformation *t, bool inheritSurface);
-
-	void add_positive(Object *o, Transformation *t, bool inheritSurface);
-	void add_negative(Object *o, Transformation *t, bool inheritSurface);
-private:
+protected:
 	/// A instance of a object in the container.
 	struct Instance{
 		Object *o;
@@ -48,7 +35,7 @@ private:
 	};
 
 	enum Axis{
-		NONE = 0xDEADBEEF, // why not :-)
+		NONE = -1,
 		X = 0,
 		Y = 1,
 		Z = 2,
@@ -64,13 +51,12 @@ private:
 		Axis axis;
 		double coord;
 
-		Instance *i;
-
+		LList<Instance> instances;
 	};
 
 	Surface *get_surface(const Point3D *p, const Ray *r) const;
 
-	Intersection *get_limited_instersection(KDTree *t, const Ray *r, Renderer *rend, double tMin, double tMax) const;
+	double get_limited_instersection(KDTree *t, const Ray *r, Renderer *rend, double tMin, double tMax) const;
 	Intersection *get_all_instersections(KDTree *t, const Ray *r, Renderer *rend, double tMin, double tMax) const;
 
 	void check_split_planes(Point3D *pt, Instance *list, double *bestSplit, double *bestAxis, int *bestBalance);

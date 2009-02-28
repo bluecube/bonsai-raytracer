@@ -2,15 +2,17 @@
 
 Cube() : bbox(Point(-1., -1., -1.), Point(1., 1., 1.)) {}
 
-Intersection *Cube::trace(const Ray *r, Renderer *rend) const{
-	Intersection *tmp = rend -> new_intersection(this, r, bbox.tMin);
-	tmp -> next = rend -> new_intersection(this, r, bbox.tMax);
+LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
+	LList<intersection> ret;
+	ret.append_single(rend->new_intersection(this, r, bbox.tMin));
+	ret.append_single(rend->new_intersection(this, r, bbox.tMax));
 	
 	return tmp;
 }
 
-Intersection *Cube::trace_limited(const Ray *r, Renderer *rend) const{
-	return rend -> new_ntersection(this, r, bbox.tMin);
+bool Cube::trace_limited(const Ray *r, Intersection *ret, Renderer *rend, Intersection * out) const{
+	out->edit(this, r, bbox.tMin);
+	return true;
 }
 
 Surface *Cube::get_surface(const Point *p, Ray *r) const;

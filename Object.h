@@ -17,16 +17,17 @@ public:
 	virtual LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
 
 	/// Finds the first positive intersection between the ray and the object.
-	/// \return Distance of first positive intersection, or INFINITY there isn't any.
-	virtual double trace_limited(const Ray *r, Renderer *rend) const = 0;
+	/// \arg out the intersection in which the output is stored.
+	/// \return Returns true if there was an intersection, false if there wasn't.
+	virtual bool trace_limited(const Ray *r, Renderer *rend, Intersection *out) const = 0;
 
-	/// Find out if the point is inside the object
+	/// Find out if the point is inside the object.
 	virtual bool is_inside(const Point3D *p) const = 0;
 
 	/// Returns the bounding box of the object.
 	/// The bounding box of the object _must_ be checked before calling
 	/// the trace() or trace_limited() methods!
-	inline const BoundingBox *get_bounding_box(){
+	const BoundingBox *get_bounding_box(){
 		return &bbox;
 	}
 

@@ -17,7 +17,7 @@ LList<Intersection> Sphere::trace(const Ray *r, Renderer *rend) const{
 	return ret;
 }
 
-double Sphere::trace_limited(const Ray *r, Renderer *rend) const{
+bool Sphere::trace_limited(const Ray *r, Renderer *rend, Intersection *out) const{
 	double dotproduct = ray.direction * ray.origin;
 	double d = dotproduct * dotproduct - abspow2(ray.origin) + 1;
 
