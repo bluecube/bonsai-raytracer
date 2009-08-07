@@ -6,6 +6,14 @@ public:
 	Pixmap(unsignd int width, usigned int height);
 	~Pixmap():
 
+	size_t get_width(){
+		return w;
+	}
+
+	size_t get_height(){
+		return h;
+	}
+
 	inline Coulour *get_row(unsigned int row){
 		return pixmap + w * row;
 	}
@@ -14,11 +22,10 @@ public:
 		return pixmap[x + y * w];
 	}
 
-	void compress_HDR();
-	void write_png(char *fn);
+	void compress_hdr();
 private:
 	Colour *pixmap;
-	unsigned int w, h;
+	size_t w, h;
 };
 
 #endif

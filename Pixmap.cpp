@@ -1,6 +1,6 @@
 #include "Pixmap.h"
 
-Pixmap::Pixmap(unsignd int width, usigned int height) : w(width), h(height) {
+Pixmap::Pixmap(size_t width, size_t height) : w(width), h(height) {
 	pixmap = new Coulour[w * h];
 }
 

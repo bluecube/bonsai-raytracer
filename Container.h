@@ -43,9 +43,6 @@ protected:
 
 	/// The KD-tree node.
 	struct KDTree{
-		/// \todo build_tree and delete_tree as KDTree methods?
-		/// How would keepInstances be done?
-
 		KDTree *front, *back;
 
 		Axis axis;

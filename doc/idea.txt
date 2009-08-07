@@ -1,0 +1,15 @@
+Bonsai is my raytracer project to relax from other programming :-)
+
+What it should do:
+- be multi-threaded
+- be distrbuted (running on multiple hosts)
+- be distributing (models the illumination equation
+  by distributing a set of ray from every reflection/refraction).
+- support true DOF.
+- render in HDR and export to HDR.
+- Currently I'm not trying to support motion blur or video rendering.
+- I try to speed things up by using KD trees as containers.
+
+The motto is:
+I don't care how long it takes, as long as the pictures are pretty.
+...and also -Ofun

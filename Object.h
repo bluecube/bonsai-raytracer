@@ -13,7 +13,7 @@ class Intersection;
 /// Virtual class representing an object that can be displayed.
 class Object{
 public:
-	/// Finds all intersections between the ray and the object.
+	/// Finds all intersections between the ray and the object; sorted.
 	virtual LList<Intersection> trace(const Ray *r, Renderer *rend) const = 0;
 
 	/// Finds the first positive intersection between the ray and the object.

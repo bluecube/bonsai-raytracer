@@ -39,16 +39,16 @@ void Container::rebuild(){
 
 	Instance *i = tmpObjs;
 	while(i){
-		i -> o -> rebuild();
+		i->o->rebuild();
 
-		i -> transformedBBox = *(i -> o -> get_bounding_box());
-		(i -> transformedBBox).transform(i -> t);
+		i->transformedBBox = *(i->o->get_bounding_box());
+		(i->transformedBBox).transform(i->t);
 
-		bbox.enlarge(i -> transformedBBox);
+		bbox.enlarge(i->transformedBBox);
 		
 		++cItems;
 
-		i = i -> next;
+		i = i->next;
 	}
 
 	t = buildTree(tmpInstances, &bbox, cItems);
