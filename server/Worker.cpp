@@ -1,10 +1,10 @@
-#include "Renderer.h"
+#include "Worker.h"
 
-Renderer::~Renderer(){
+Worker::~Worker(){
 	clear_pool();
 }
 
-Intersection *Renderer::intersection_from_pool(){
+Intersection *Worker::intersection_from_pool(){
 	if(pool){
 		Intersection *ret = pool;
 
@@ -14,17 +14,17 @@ Intersection *Renderer::intersection_from_pool(){
 		return new Intersection();
 }
 
-void Renderer::intersection_to_pool(Intersection *i){
+void Worker::intersection_to_pool(Intersection *i){
 	i -> next = pool;
 	pool = i;
 }
 
-void Renderer::intersections_to_pool(Intersection *first, Intersection *last){
+void Worker::intersections_to_pool(Intersection *first, Intersection *last){
 	last -> next = pool;
 	pool = first;
 }
 
-void Renderer::clear_pool(){
+void Worker::clear_pool(){
 	while(pool){
 		Intersection *tmp = pool -> next;
 		delete pool;
@@ -32,7 +32,7 @@ void Renderer::clear_pool(){
 	}
 }
 
-void Renderer::render(Scene *s, Pixmap *p, unsigned int fromRow, unsigned int toRow){
+void Worker::render(Scene *s, Pixmap *p, unsigned int fromRow, unsigned int toRow){
 	Colour *pixel = p -> getRow(fromRow);
 	for(unsigned int y = fromRow; y < rowTo; ++y){
 		for(unsigned int x = 0; x < p -> get_width(); ++x){

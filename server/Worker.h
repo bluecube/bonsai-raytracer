@@ -1,9 +1,9 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef WORKER_H
+#define WORKER_H
 
 /// A class for a single working thread.
-class Renderer{
-	Renderer() : pool(0), poolEnd(&pool) {}
+class Worker{
+	Worker() : pool(0), poolEnd(&pool) {}
 
 	Intersection *intersection_from_pool();
 	void intersection_to_pool(Intersection *i);
