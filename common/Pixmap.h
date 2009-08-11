@@ -3,16 +3,17 @@
 
 #include <cstdlib>
 
-#include <Imlib2.h>
-
 #include "Colour.h"
 
 /// Class representing a HDR pixmap.
 class Pixmap{
 public:
+#ifdef WITH_PIXMAP_SAVE
 	enum{
 		MAPPING_CLIP,
+		MAPPING_LINEAR,
 	};
+#endif
 
 	Pixmap(unsignd int width, usigned int height);
 	~Pixmap():
@@ -67,13 +68,19 @@ public:
 		copy_rows(source, 0, targetRow, source->get_height());
 	}
 
+#ifdef WITH_PIXMAP_SAVE
 	void save(const char *file, int mapping = MAPPING_CLIP);
-
 	void save_hdr(consr char *file);
-private
+private:
 	void clip_mapping(DATA32 *data);
+	void linear_mapping(DATA32 *data);
+
+	void get_extremes(double *min, double *max);
 	
 	int clip_value(double value);
+#else
+private:
+#endif
 
 	Colour *pixmap;
 	size_t w, h;
