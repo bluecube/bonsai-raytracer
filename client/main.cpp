@@ -1,14 +1,13 @@
-#include "Scene.h"
-
-#include "LList.h"
-
 #include <getopt.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "common/LList.h"
+#include "common/Scene.h"
 
 const unsigned long DEFAULT_PORT = 91823;
-const unsigned int DEFAULT_GRANULARITY = 8;
+const unsigned int DEFAULT_GRANULARITY = 16;
 const unsigned int DEFAULT_W = 1024;
 
 const char *DEFAULT_EXTENSION = ".hdr";
@@ -117,14 +116,8 @@ int main(int argc, char **argv){
 		usedDefaultOutputFile = true;
 	}
 
-	granularity *= dispatcher.get_available_threads();
-
 	Scene scene(argv[optind]);
 	unsigned height = width / scene.get_aspect_ratio();
-
-	unsigned chunksX = 1 + (int)sqrt(granularity * scene.get_aspect_ratio());
-	unsigned chunksY = 1 + granularity / chunksX;
-	granularity = chunksX * chunksY;
 
 	dispatcher.set_scene(&scene);
 	dispatcher.set_pixmap()

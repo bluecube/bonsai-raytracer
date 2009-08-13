@@ -1,34 +1,36 @@
 #ifndef RENDERDISPATCHER_H
 #define RENDERDISPATCHER_H
 
-#include "RenderServerConnection.h"
-
-#include "Scene.h"
-#include "Pixmap.h"
+#include <stdlib.h>
 
 #include <vector>
-#include <pthread.h>
+
+#include "clinet/RenderServerConnection.h"
+#include "common/Scene.h"
+#include "common/Pixmap.h"
 
 class RenderDispatcher{
 public:
-	RenderDispatcher() : threads(0), working(0) {}
+	RenderDispatcher() : {}
 
 	void add_connection(RenderServerConnection *con){
 		connections.push_back(con);
-		threads += con -> get_available_threads();
+		threads += con->get_available_threads();
+	}
+	
+	/// Set the number of chunks per available thread.
+	void set_granularity(unsigned granularity_){
+		granularity = granularity_;
 	}
 
 	int get_available_threads(){
 		return threads;
 	}
 
-	void set_chunks(unsigned X, unsigned Y){
-		chunksX = X;
-		chunksY = Y;
-	}
-
+	/// Return the progress as a number between 0 (not completed)
+	/// and 1 (complete).
 	double get_progress(){
-		return progress;
+		return progress / pixmap->get_height();
 	}
 
 	unsigned get_waiting_chunks(){
@@ -51,25 +53,19 @@ public:
 
 	void wait_for_update();
 private:
-	pthread_cond_t updated;
+	struct Chunk{
+		unsigned y0, y1;
+	};
 
-	bool one_chunk(RenderServerConnection *con);
+	unsigned granularity;
+
+	std::vector<Chunk> waitingChunks;
 
 	std::vector<RenderServerConnection *> connections;
 
-	unsigned working;
-
-	/// Server connection calls this when a chunk is finished.
-	void ready(RenderServerConnection *con);
-
-	unsigned chunksX, chunksY;
-	unsigned chunkWidth, chunkHeight;
-
-	unsigned currentChunkX, currentChunkY;
-
-	double progress;
+	size_t progress;
 	
-	unsigned threads;
+	int threads;
 
 	Scene *scene;
 	Pixmap *pixmap;

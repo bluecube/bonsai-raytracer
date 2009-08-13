@@ -1,3 +1,5 @@
+#ifdef WITH_PIXMAP_SAVE
+
 #include "Pixmap.h"
 
 #include <cstdio>
@@ -6,6 +8,7 @@
 #include <Imlib2.h>
 
 using namespace std;
+
 
 /// \internal
 /// A pixel format used by the radiance hdr.
@@ -194,3 +197,5 @@ int Pixmap::clip_value(double value){
 	return 0;
 	
 }
+
+#endif
