@@ -3,22 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common/LList.h"
+#include <list>
+
 #include "common/Scene.h"
+#include "client/RenderDispatcher.h"
+#include "client/RenderServerConnection.h"
 
 const unsigned long DEFAULT_PORT = 91823;
 const unsigned int DEFAULT_GRANULARITY = 16;
 const unsigned int DEFAULT_W = 1024;
 
 const char *DEFAULT_EXTENSION = ".hdr";
-
-class Chunk{
-	public:
-	double finished; /// < What part of this chunk is finished.
-
-	std::list<RenderServerConnection>::const_iterator assignedTo;
-	unsigned chunkX, chunkY;
-}
 
 void usage(char *name){
 	printf("Usage: %s [OPTIONS] INPUT_FILE\n", name);
@@ -36,6 +31,10 @@ void usage(char *name){
 	printf("\t-s, --server=SERVER[:PORT][,SERVER[:PORT]...]\n");
 	printf("\t\tRendering server(s) to connect to.\n");
 	printf("\t\tIf port is ommited use the default %i.\n", DEFAULT_PORT);
+#if WITH_SDL
+	printf("\t-u, --gui\n");
+	printf("\t\tEnable SDL gui.\n");
+#endif
 
 	printf("\t-r, --resolution=WIDTH\n");
 	printf("\t\tOutput resolution. Height is calculated from the aspect ratio in\n");
@@ -47,11 +46,13 @@ int main(int argc, char **argv){
 	bool usedDefaultOutputFile = false;
 	unsigned int width = DEFAULT_W;
 	unsigned int granularity = DEFAULT_GRANULARITY;
+	bool gui = false;
 
 	RenderDispatcher dispatcher;
 
 	printf("Bonsai rayracer client\n");
 
+	dispatcher.set_granularity(DEFAULT_GRANULARITY);
 
 	while(1){
 		int opt;
@@ -63,6 +64,9 @@ int main(int argc, char **argv){
 			{"output", 1, 0, 'o'},
 			{"resolution", 1, 0, 'r'},
 			{"server", 1, 0, 's'},
+#if WITH_SDL
+			{"gui", 1, 0, 'u'},
+#endif
 			{0, 0, 0, 0}
 		};
 		opt = getopt_long(argc, argv, "g:ho:r:s:", longopts, 0);
@@ -81,10 +85,10 @@ int main(int argc, char **argv){
 				}
 				++optarg;
 			}
-			dispatcher.addConnection(new RenderServerConnection(tmp));
+			dispatcher.add_connection(new RenderServerConnection(tmp));
 			break;
 		case 'g':
-			granularity = atoi(optarg);
+			dispatcher.set_granularity(atoi(optarg));
 			break;
 		case 'h':
 			usage(argv[0]);
@@ -95,6 +99,11 @@ int main(int argc, char **argv){
 		case 'r':
 			width = atoi(optarg);
 			break;
+#if WITH_SDL
+		case 'u':
+			gui = true;
+			break;
+#endif
 		}
 	}
 
@@ -119,17 +128,21 @@ int main(int argc, char **argv){
 	Scene scene(argv[optind]);
 	unsigned height = width / scene.get_aspect_ratio();
 
+	Pixmap outputPixmap(width, height);
+
 	dispatcher.set_scene(&scene);
-	dispatcher.set_pixmap()
-	dispatcher.set_chunks(chunksX, chunksY);
+	dispatcher.set_pixmap(&outputPixmap);
 
 	printf("Starting rendering\n"):
 	dispatcher.go();
 
 	while(!dispatcher.finished()){
-		sleep(5);
-		printf("%.2f%%; %u of %u waiting\n",
-		       100 * dispatcher.get_progress(), dispatcher.get_waiting_chunks(), granularity);
+		dispatcher.wait();
+		printf("%.2f%%; chunks: %u waiting, %u working %u done\n",
+		       100 * dispatcher.get_progress(),
+		       dispatcher.get_waiting_chunks(),
+		       dispatcher.get_working_chunks(),
+		       dispatcher.get_finished_chunks());
 	}
 
 	if(usedDefaultOutputFile)

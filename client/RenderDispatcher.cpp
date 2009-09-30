@@ -2,6 +2,8 @@
 
 using namespace std;
 
+RenderDispatcher() : granularity(0), progress(0), threads(0), scene(NULL), Pixmap(NULL) {}
+
 /// Start rendering using all available threads.
 void RenderDispatcher::go(){
 	Chunk tmp;

@@ -1,7 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "Container.h"
+#include "common/objects/Container.h"
 
 /// Scene is a container with some aditional properties.
 class Scene : public Container{

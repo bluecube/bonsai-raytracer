@@ -40,7 +40,7 @@ public:
 	LList<T> prepend_single(T *i);
 
 	LList<T> split_after(T *i);
-	LList<T> delete_after(T *i);
+	T* drop_after(T *i);
 	void delete_after(T *i);
 
 	void delete_list();

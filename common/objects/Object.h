@@ -1,11 +1,11 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "Surface.h"
-#include "BoundingBox.h"
-#include "Ray.h"
-#include "Vector3D.h"
-#include "LList.h"
+#include "common/Surface.h"
+#include "common/BoundingBox.h"
+#include "common/Ray.h"
+#include "common/Vector3D.h"
+#include "common/LList.h"
 
 class Renderer;
 class Intersection;

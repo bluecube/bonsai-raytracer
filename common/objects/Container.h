@@ -1,8 +1,8 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
-#include "Object.h"
-#include "LList.h"
+#include "common/objects/Object.h"
+#include "common/LList.h"
 
 /// Container object.
 /// Does the logical OR on objects it contains.
@@ -64,7 +64,6 @@ protected:
 	KDTree *tree;
 	Instance *tmpInstances;
 
-	Mode mode;
 	bool rebuilt;
 
 	unsigned int cItems;

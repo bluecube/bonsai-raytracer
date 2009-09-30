@@ -5,13 +5,13 @@
 
 #include <vector>
 
-#include "clinet/RenderServerConnection.h"
+#include "client/RenderServerConnection.h"
 #include "common/Scene.h"
 #include "common/Pixmap.h"
 
 class RenderDispatcher{
 public:
-	RenderDispatcher() : {}
+	RenderDispatcher();
 
 	void add_connection(RenderServerConnection *con){
 		connections.push_back(con);
@@ -60,6 +60,8 @@ private:
 	unsigned granularity;
 
 	std::vector<Chunk> waitingChunks;
+	std::vector<Chunk> workingChunks;
+	
 
 	std::vector<RenderServerConnection *> connections;
 
@@ -69,8 +71,6 @@ private:
 
 	Scene *scene;
 	Pixmap *pixmap;
-
-	friend class RenderServerConnection;
 };
 
 #endif

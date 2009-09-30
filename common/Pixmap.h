@@ -15,27 +15,38 @@ public:
 	};
 #endif
 
-	Pixmap(unsignd int width, usigned int height);
-	~Pixmap():
+	Pixmap(size_t width, size_t height);
+	~Pixmap();
 
 	/// Return the width of the pixmap.
-	size_t get_width(){
+	size_t get_width() const{
 		return w;
 	}
 
 	/// Return the Height of the pixmap.
-	size_t get_height(){
+	size_t get_height() const{
 		return h;
 	}
 	
 	/// Return a pointer to a row of pixmap.
 	/// Doesn't perform any checking.
-	Coulour *get_row(size_t row){
+	Colour *get_row(size_t row){
+		return pixmap + w * row;
+	}
+	
+	/// Return a pointer to a row of pixmap.
+	/// Doesn't perform any checking.
+	const Colour *get_row(size_t row) const{
 		return pixmap + w * row;
 	}
 	
 	/// Alias to get_row.
 	Colour *operator()(size_t row){
+		return get_row(row);
+	}
+	
+	/// Alias to get_row.
+	const Colour *operator()(size_t row) const{
 		return get_row(row);
 	}
 	
@@ -45,6 +56,11 @@ public:
 		return pixmap[x + y * w];
 	}
 
+	/// Return a reference to a single pixel.
+	/// Doesn't perform any checking.
+	const Colour &operator()(size_t x, size_t y) const{
+		return pixmap[x + y * w];
+	}
 	/// Copy rows from source to the current pixmap.
 	/// No checks are performed.
 	/// \pre this->get_width() == source->get_width()
