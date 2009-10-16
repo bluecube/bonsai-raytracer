@@ -12,12 +12,17 @@ Polynomial::Polynomial(double &constant){
 	coefs[0] = constant;
 }
 
+/// Evaluate the polynomial in point x using Hohner's rule.
 double Polynomial::evaluate(double x){
 	double value = 0;
 
 	for(int i = n - 1; i >= 0; --i){
-		value *= x;
-		value += coefs[i];
+#if FP_FAST_FMA
+		value = fma(value, x, coefs[i]);
+#else
+		#warning "Not using fma, because it's not fast."
+		value = value * x + coefs[i];
+#endif
 	}
 
 	return value;
