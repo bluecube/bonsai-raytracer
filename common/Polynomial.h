@@ -33,7 +33,7 @@ public:
 		coefs[0] += d;
 		return *this;
 	}
-	Polynomial &operator-=(Polynomial &p){
+	Polynomial &operator-=(double d){
 		coefs[0] -= d;
 		return *this;
 	}
@@ -50,56 +50,56 @@ public:
 		return operator*=(1 / d);
 	}
 
-	friend Polynomial &operator+(Polynomial &a, Polynomial &b);
-	friend Polynomial &operator-(Polynomial &a, Polynomial &b);
-	friend Polynomial &operator*(Polynomial &a, Polynomial &b);
-	friend Polynomial &operator+(Polynomial &a, double b);
-	friend Polynomial &operator-(Polynomial &a, double b);
-	friend Polynomial &operator*(Polynomial &a, double b);
-	friend Polynomial &operator/(Polynomial &a, double b);
+	friend Polynomial operator+(Polynomial &a, Polynomial &b);
+	friend Polynomial operator-(Polynomial &a, Polynomial &b);
+	friend Polynomial operator*(Polynomial &a, Polynomial &b);
+	friend Polynomial operator+(Polynomial &a, double b);
+	friend Polynomial operator-(Polynomial &a, double b);
+	friend Polynomial operator*(Polynomial &a, double b);
+	friend Polynomial operator/(Polynomial &a, double b);
 private:
 	double *coefs;
 	int n;
 };
 
 
-inline Polynomial &operator+(Polynomial &a, Polynomial &b){
+inline Polynomial operator+(Polynomial &a, Polynomial &b){
 	Polynomial tmp(a);
 	tmp += b;
 	return tmp;
 }
 
-inline Polynomial &operator-(Polynomial &a, Polynomial &b){
+inline Polynomial operator-(Polynomial &a, Polynomial &b){
 	Polynomial tmp(a);
 	tmp -= b;
 	return tmp;
 }
 
-inline Polynomial &operator+(Polynomial &a, double b){
+inline Polynomial operator+(Polynomial &a, double b){
 	Polynomial tmp(a);
 	tmp += b;
 	return tmp;
 }
 
-inline Polynomial &operator-(Polynomial &a, double b){
+inline Polynomial operator-(Polynomial &a, double b){
 	Polynomial tmp(a);
 	tmp -= b;
 	return tmp;
 }
 
-inline Polynomial &operator*(Polynomial &a, Polynomial &b){
+inline Polynomial operator*(Polynomial &a, Polynomial &b){
 	Polynomial tmp(a);
 	tmp *= b;
 	return tmp;
 }
 
-inline Polynomial &operator*(Polynomial &a, double b){
+inline Polynomial operator*(Polynomial &a, double b){
 	Polynomial tmp(a);
 	tmp *= b;
 	return tmp;
 }
 
-inline Polynomial &operator/(Polynomial &a, double b){
+inline Polynomial operator/(Polynomial &a, double b){
 	Polynomial tmp(a);
 	tmp /= b;
 	return tmp;

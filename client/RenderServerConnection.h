@@ -1,6 +1,10 @@
 #ifndef RENDERSERVERCONNECTION_H
 #define RENDERSERVERCONNECTION_H
 
+#include <stdio.h>
+
+#include "common/Scene.h"
+
 class RenderDispatcher;
 
 /// A class representing a connection to the render server.
@@ -19,6 +23,10 @@ public:
 	void set_dispatcher(RenderDispatcher *d){
 		dispatcher = d;
 	}
+
+	void set_scene(Scene *s);
+
+	void render(unsigned w, unsigned y0, unsigned y1);
 private:
 	RenderDispatcher *dispatcher;
 };

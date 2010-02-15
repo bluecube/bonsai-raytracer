@@ -4,13 +4,15 @@
 #ifndef LLIST_H
 #define LLIST_H
 
+#include <stdlib.h>
+
 /// A class that manages an unidirectional linked list.
 /// The list item is of type T. The only requirement for the type is
 /// that it has a member T* next.
 /// This class keeps a pointer to beginning of the linked list
 /// and a pointer to the next pointer of the last item to speed up appends.
 /// \note The destructor of this class doesn't deallocate the list.
-/// \note This class may be used exactly like T*, wit the only exception being
+/// \note This class may be used exactly like T*, with the only exception being
 /// that assigning a T* to LList takes O(N) time, instead of O(1) (the last element must be found).
 /// \note Prepending is a tiny bit slower than appending (but still in constant time).
 template<class T>

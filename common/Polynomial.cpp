@@ -1,11 +1,11 @@
 #include "Polynomial.h"
 
-Polynomial::Polynomial(int degree = 0){
+Polynomial::Polynomial(int degree){
 	n = degree + 1;
 	coefs = new double[n];
 }
 
-Polynomial::Polynomial(double &constant){
+Polynomial::Polynomial(double constant){
 	n = 1;
 	coefs = new double[1];
 
@@ -17,12 +17,7 @@ double Polynomial::evaluate(double x){
 	double value = 0;
 
 	for(int i = n - 1; i >= 0; --i){
-#if FP_FAST_FMA
-		value = fma(value, x, coefs[i]);
-#else
-		#warning "Not using fma, because it's not fast."
 		value = value * x + coefs[i];
-#endif
 	}
 
 	return value;
@@ -75,7 +70,7 @@ Polynomial &Polynomial::operator*=(Polynomial &p){
 	double *tmp = new double[n + p.n - 1];
 
 	for(int i = 0; i < n; ++i)
-		for(int j = 0; j < p,n; ++j){
+		for(int j = 0; j < p.n; ++j){
 			tmp[i + j] = coefs[i] * p.coefs[j];
 		}
 	

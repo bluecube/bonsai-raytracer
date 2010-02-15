@@ -17,7 +17,7 @@ const char *DEFAULT_EXTENSION = ".hdr";
 
 void usage(char *name){
 	printf("Usage: %s [OPTIONS] INPUT_FILE\n", name);
-	printf("Render a scene from FILE.\n\n");
+	printf("Render a scene from INPUT_FILE.\n\n");
 
 	printf("Processing options\n");
 	printf("\t-g, --granularity=NUMBER\n");
@@ -30,7 +30,7 @@ void usage(char *name){
 	printf("\t\tSave output file at this location. Defaults to INPUT_FILE%s\n", DEFAULT_EXTENSION);
 	printf("\t-s, --server=SERVER[:PORT][,SERVER[:PORT]...]\n");
 	printf("\t\tRendering server(s) to connect to.\n");
-	printf("\t\tIf port is ommited use the default %i.\n", DEFAULT_PORT);
+	printf("\t\tIf port is ommited use the default %lu.\n", DEFAULT_PORT);
 #if WITH_SDL
 	printf("\t-u, --gui\n");
 	printf("\t\tEnable SDL gui.\n");
@@ -80,7 +80,7 @@ int main(int argc, char **argv){
 			while(*optarg){
 				if(*optarg == ','){
 					*optarg = '\0';
-					dispatcher.addConnection(new RenderServerConnection(tmp));
+					dispatcher.add_connection(new RenderServerConnection(tmp));
 					tmp = optarg + 1;
 				}
 				++optarg;
@@ -115,8 +115,11 @@ int main(int argc, char **argv){
 	if(optind >= argc){
 		printf("An input file must be specified.\n");
 		usage(argv[0]);
-		servers.delete_list();
 		return 1;
+	}
+
+	if(optind < argc - 1){
+		printf("Only the first input file will be processed.\n");
 	}
 
 	if(!outputFile){
@@ -125,7 +128,8 @@ int main(int argc, char **argv){
 		usedDefaultOutputFile = true;
 	}
 
-	Scene scene(argv[optind]);
+	Scene scene;
+	//loadScene(&scene, argv[optind]);
 	unsigned height = width / scene.get_aspect_ratio();
 
 	Pixmap outputPixmap(width, height);
@@ -133,16 +137,15 @@ int main(int argc, char **argv){
 	dispatcher.set_scene(&scene);
 	dispatcher.set_pixmap(&outputPixmap);
 
-	printf("Starting rendering\n"):
+	printf("Starting rendering\n");
 	dispatcher.go();
 
-	while(!dispatcher.finished()){
-		dispatcher.wait();
-		printf("%.2f%%; chunks: %u waiting, %u working %u done\n",
+	while(!dispatcher.is_finished()){
+		dispatcher.wait_for_update();
+		printf("%.2f %%; chunks: %u waiting, %u working\n",
 		       100 * dispatcher.get_progress(),
 		       dispatcher.get_waiting_chunks(),
-		       dispatcher.get_working_chunks(),
-		       dispatcher.get_finished_chunks());
+		       dispatcher.get_working_chunks());
 	}
 
 	if(usedDefaultOutputFile)

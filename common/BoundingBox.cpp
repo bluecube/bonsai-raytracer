@@ -69,7 +69,7 @@ void BoundingBox::enlarge(BoundingBox *inner){
 
 /// Returns the surface area of the box.
 double BoundingBox::surface(){
-	Vector size(b);
+	Vector3D size(b);
 	size -= a;
 
 	if(size.x < 0) size.x = 0;

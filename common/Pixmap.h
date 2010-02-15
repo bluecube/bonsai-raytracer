@@ -1,7 +1,8 @@
 #ifndef PIXMAP_H
 #define PIXMAP_H
 
-#include <cstdlib>
+#include <stdlib.h>
+#include <string.h>
 
 #include "Colour.h"
 
@@ -86,7 +87,7 @@ public:
 
 #ifdef WITH_PIXMAP_SAVE
 	void save(const char *file, int mapping = MAPPING_CLIP);
-	void save_hdr(consr char *file);
+	void save_hdr(const char *file);
 private:
 	void clip_mapping(DATA32 *data);
 	void linear_mapping(DATA32 *data);

@@ -12,7 +12,7 @@ void Transformation::multiply(Transformation a, Transformation b, double *out){
 	}
 }
 
-void Transform::invert(){
+void Transformation::invert(){
 	
 	
 }
