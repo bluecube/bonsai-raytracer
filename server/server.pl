@@ -5,11 +5,11 @@ use warnings;
 
 use Getopt::Long;
 use List::Util qw(min max);
-use POSIX qw(frexp);
 
 use Image::Magick;
 
 use Scene;
+use RadianceHDR;
 
 use constant ID_STRING => "Bonsai raytracer server v0.1";
 
@@ -55,7 +55,13 @@ print "Only single input file is allowed.\n\n" and usage() if @ARGV > 1;
 nextChunk();
 
 print "Will write to '$output'.\n";
-outputHDR($scene);
+RadianceHDR::outputHDR(
+	$scene->{'outputFile'},
+	$scene->{'width'},
+	$scene->{'height'},
+	$scene->{'image'},
+	$commandLine,
+	ID_STRING);
 print "Done.\n";
 
 print "Bye bye\n";
@@ -159,42 +165,6 @@ sub loadScene(){
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
 	1;
-}
-
-sub outputHDR{
-	my $scene = shift;
-
-	my $data = $scene->{'image'};
-
-	open IMAGE, '>' . $scene->{'outputFile'};
-
-	print IMAGE "#?RADIANCE\n";
-	print IMAGE $commandLine, '\n' if $commandLine;
-	print IMAGE "FORMAT=32-bit_rle_rgbe\n";
-	print IMAGE "SOFTWARE=", ID_STRING, "\n";
-	print IMAGE "\n";
-	print IMAGE "-Y ", $scene->{'height'}, " +X ", $scene->{'width'}, "\n";
-	
-	my $count = $scene->{'width'} * $scene->{'height'};
-	for(my $i = 0; $i < $count; ++$i){
-		print IMAGE float2rgbe($data->[$i]);
-	}
-
-	close IMAGE;
-}
-
-# Gets floating point RGB as parameters and returns
-# 4B long string in RGBE
-sub float2rgbe{
-	my $tmp = shift;
-	my @rgb = @$tmp;
-	my $max = max(@rgb);
-
-	my ($x, $e) = frexp($max);
-	$x /= $max / 256; # $x = 256 / 2^$e;
-
-	pack'C4', ($rgb[0] * $x, $rgb[1] * $x, $rgb[2] * $x, $e + 128);
-
 }
 
 # Print the usage info and exit
