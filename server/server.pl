@@ -5,17 +5,19 @@ use warnings;
 
 use Getopt::Long;
 use List::Util qw(min max);
+use POSIX qw(frexp);
 
 use Image::Magick;
 
 use Scene;
-use Gui;
+
+use constant ID_STRING => "Bonsai raytracer server v0.1";
 
 use constant DEFAULT_CHUNKSIZE => 8000;
 use constant DEFAULT_CHUNKTIMEOUT => 60 * 20;
 use constant DEFAULT_RESOLUTION => 800;
 use constant DEFAULT_GUI => 1;
-use constant DEFAULT_EXTENSION => '.exr';
+use constant DEFAULT_EXTENSION => '.hdr';
 use constant DEFAULT_PORT => 23232;
 
 # Configuration
@@ -32,7 +34,9 @@ our $guiEnabled = DEFAULT_GUI;
 our @availableChunks; # Array of chunks waiting to be processed
 our $scene;
 
-print "Bonsai raytracer server.\n\n";
+print ID_STRING, "\n\n";
+
+our $commandLine = $0 . ' ' . join(' ', @ARGV);
 
 my $result = GetOptions(
 	'help' => \&usage,
@@ -50,10 +54,8 @@ print "Only single input file is allowed.\n\n" and usage() if @ARGV > 1;
 
 nextChunk();
 
-print "blob:\n", $scene->{'image'}->ImageToBlob(), "\n\n";
-
 print "Will write to '$output'.\n";
-print $scene->{'image'}->Write($output);
+outputHDR($scene);
 print "Done.\n";
 
 print "Bye bye\n";
@@ -87,10 +89,12 @@ sub loadScene(){
 	print "Loaded.\n";
 
 	if(!defined($output)){
-		$output = $file;
+		$scene->{'outputFile'} = $file;
 
-		$output =~ s|\.[^./]*$||;
-		$output .= DEFAULT_EXTENSION;
+		$scene->{'outputFile'} =~ s|\.[^./]*$||;
+		$scene->{'outputFile'} .= DEFAULT_EXTENSION;
+	}else{
+		$scene->{'outputFile'} = $output;
 	}
 
 	my $width;
@@ -123,9 +127,7 @@ sub loadScene(){
 	$width = int($width);
 	$height = int($height);
 
-	$scene->{'image'} = new Image::Magick;
-	$scene->{'image'}->Set(size => $width . 'x' . $height, magick => 'RGB');
-	$scene->{'image'}->ReadImage('xc:red');
+	my @image = ();
 
 	my $count = 0;
 
@@ -139,17 +141,16 @@ sub loadScene(){
 			'scene' => $scene,
 			};
 	
-		my $color;
+		if($count & 1){
+			push @image, ([0.5, 0, 0]) x ($width * $len);
+		}else{
+			push @image, ([0.12, 0.3, 0]) x ($width * $len);
+		}
 		
-		$scene->{'image'}->Draw(
-			primitive => 'rectangle',
-			fill => 'green',
-			stroke => 'green',
-			points => '0,' . $y . ' ' . ($width - 1) . ',' . ($y + $len - 1),
-			strokewidth => 0) if($count & 1);
-
 		++$count;
 	}
+
+	$scene->{'image'} = \@image;
 
 	$scene->{'width'} = $width;
 	$scene->{'height'} = $height;
@@ -158,6 +159,42 @@ sub loadScene(){
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
 	1;
+}
+
+sub outputHDR{
+	my $scene = shift;
+
+	my $data = $scene->{'image'};
+
+	open IMAGE, '>' . $scene->{'outputFile'};
+
+	print IMAGE "#?RADIANCE\n";
+	print IMAGE $commandLine, '\n' if $commandLine;
+	print IMAGE "FORMAT=32-bit_rle_rgbe\n";
+	print IMAGE "SOFTWARE=", ID_STRING, "\n";
+	print IMAGE "\n";
+	print IMAGE "-Y ", $scene->{'height'}, " +X ", $scene->{'width'}, "\n";
+	
+	my $count = $scene->{'width'} * $scene->{'height'};
+	for(my $i = 0; $i < $count; ++$i){
+		print IMAGE float2rgbe($data->[$i]);
+	}
+
+	close IMAGE;
+}
+
+# Gets floating point RGB as parameters and returns
+# 4B long string in RGBE
+sub float2rgbe{
+	my $tmp = shift;
+	my @rgb = @$tmp;
+	my $max = max(@rgb);
+
+	my ($x, $e) = frexp($max);
+	$x /= $max / 256; # $x = 256 / 2^$e;
+
+	pack'C4', ($rgb[0] * $x, $rgb[1] * $x, $rgb[2] * $x, $e + 128);
+
 }
 
 # Print the usage info and exit
