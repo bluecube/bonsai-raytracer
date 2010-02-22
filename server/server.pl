@@ -3,10 +3,11 @@
 use strict;
 use warnings;
 
+use threads;
 use Getopt::Long;
 use List::Util qw(min max);
-
-use Image::Magick;
+use Socket;
+use Term::ProgressBar;
 
 use Scene;
 use RadianceHDR;
@@ -16,7 +17,6 @@ use constant ID_STRING => "Bonsai raytracer server v0.1";
 use constant DEFAULT_CHUNKSIZE => 8000;
 use constant DEFAULT_CHUNKTIMEOUT => 60 * 20;
 use constant DEFAULT_RESOLUTION => 800;
-use constant DEFAULT_GUI => 1;
 use constant DEFAULT_EXTENSION => '.hdr';
 use constant DEFAULT_PORT => 23232;
 
@@ -28,60 +28,78 @@ our $timeout = DEFAULT_CHUNKTIMEOUT;
 our $resume;
 our $output;
 our $port = DEFAULT_PORT;
-our $guiEnabled = DEFAULT_GUI;
 
-# global stuff
-our @availableChunks; # Array of chunks waiting to be processed
-our $scene;
+# Status stuff
+our $status;
 
-print ID_STRING, "\n\n";
+sub initStatus{
+	my $scene = shift;
+	$status = new Term::ProgressBar({
+		name => 'Rendering',
+		count => $scene->{'height'},
+		remove => 1,
+		ETA => 'linear',});
+}
 
-our $commandLine = $0 . ' ' . join(' ', @ARGV);
+sub updateStatusMessage{
+	my $scene = shift;
 
-my $result = GetOptions(
-	'help' => \&usage,
-	'chunksize=i' => \$chunkSize,
-	'gui!' => \$guiEnabled,
-	'width=i' => \$widthOption,
-	'height=i' => \$heightOption,
-	'output=s' => \$output,
-	'port=i' => \$port,
-	'timeout=i' => \$timeout,
-	'resume=s' => \$resume);
+	my $totalChunks = $scene->{'chunkCount'};
+	my $waitingChunks = scalar @{$scene->{'availableChunks'}};
+	my $finishedChunks = $scene->{'finishedChunkCount'};
+	my $busyChunks = $totalChunks - $finishedChunks - $waitingChunks;
 
-print "No input files.\n\n" and usage() unless @ARGV;
-print "Only single input file is allowed.\n\n" and usage() if @ARGV > 1;
+	$status->message("Done / busy / total chunks: $finishedChunks / $busyChunks / $totalChunks");
+}
 
-nextChunk();
+sub updateStatus{
+	my $scene = shift;
+	
+	$status->update($scene->{'finishedRows'});
+	updateStatusMessage($scene);
+}
 
-print "Will write to '$output'.\n";
-RadianceHDR::outputHDR(
-	$scene->{'outputFile'},
-	$scene->{'width'},
-	$scene->{'height'},
-	$scene->{'image'},
-	$commandLine,
-	ID_STRING);
-print "Done.\n";
-
-print "Bye bye\n";
+sub statusPrint{
+	$status->message(join ' ', @_);
+}
 
 # Get the next chunk to process
 # and mark it as busy
 sub nextChunk{
-	scalar(@availableChunks) or loadScene() or return 0;
+	my $scene = shift;
+	scalar(@{$scene->{'availableChunks'}}) or loadScene() or return 0;
 
-	my $chunk = shift @availableChunks;
+	my $chunk = shift @{$scene->{'availableChunks'}};
+
+	updateStatusMessage($scene);
 	$chunk;
+}
+
+sub failChunk{
+	my $chunk = shift;
+	unshift @{$chunk->{'scene'}->{'availableChunks'}}, $chunk;
+
+	updateStatus($chunk->{'scene'});
 }
 
 # mark the chunk as finished, put it into output array,
 # update UI.
 sub finishChunk{
 	my $chunk = shift;
-	my $data = shift;
+	my $data = $chunk->{'data'};
+	my $scene = $chunk->{'scene'};
 
-	
+	my $image = $scene->{'image'};
+
+	my $offset = $chunk->{'top'} * $scene->{'width'};
+	my $length = $chunk->{'height'} * $scene->{'width'};
+
+	scalar(@$data) == $length or die;
+
+	@{$image}[$offset .. $length - 1] = @$data;
+
+	$scene->{'finishedRows'} += $chunk->{'height'};
+	updateStatus($scene);
 }
 
 # Load a next input file and turn it into chunks.
@@ -91,7 +109,7 @@ sub loadScene(){
 	my $file = shift @ARGV;
 
 	print "Loading scene from '$file'.\n";
-	$scene = Scene::load($file);
+	my $scene = Scene::load($file);
 	print "Loaded.\n";
 
 	if(!defined($output)){
@@ -141,7 +159,7 @@ sub loadScene(){
 	for(my $y = 0; $y < $height; $y += $chunkRows){
 		my $len = min($chunkRows, $height - $y);
 
-		push @availableChunks, {
+		push @{$scene->{'availableChunks'}}, {
 			'top' => $y,
 			'height' => $len,
 			'scene' => $scene,
@@ -161,17 +179,39 @@ sub loadScene(){
 	$scene->{'width'} = $width;
 	$scene->{'height'} = $height;
 
+	# For the status display
+	$scene->{'chunkCount'} = $count;
+	$scene->{'finishedChunkCount'} = 0;
+	$scene->{'finishedRows'} = 0;
+
 	print "Output resolution: $width x $height; $count chunks, ",
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
-	1;
+	$scene;
 }
+
+sub worker{
+	local *CLIENT = shift;
+	my $scene = shift;
+	my $port = shift;
+	my $iaddr = shift;
+
+	my $name = gethostbyaddr($iaddr, AF_INET);
+
+	statusPrint "connection from $name [", inet_ntoa($iaddr), "] at port $port";
+
+	my $chunk = nextChunk($scene);
+
+	sleep 2;
+
+	failChunk($chunk);
+
+};
 
 # Print the usage info and exit
 sub usage{
 	my $chunkSize = DEFAULT_CHUNKSIZE;
 	my $resolution = DEFAULT_RESOLUTION;
-	my $gui = DEFAULT_GUI ? "enabled" : "disabled";
 	my $extension = DEFAULT_EXTENSION;
 	my $port = DEFAULT_PORT;
 	my $timeout = DEFAULT_CHUNKTIMEOUT;
@@ -186,8 +226,6 @@ OPTIONS:
 		Granularity of the rendering.
 		Roughly how many pixels will there be in one chunk.
 		Default value is $chunkSize px.
-	--gui (--nogui)
-        	Enable (disable) SDL gui with preview. Defaults to $gui.
 	--help
 		This help.
 	--output=FILE
@@ -198,10 +236,6 @@ OPTIONS:
 	--timeout=NUMBER
 		Set the chunk processing timeout in seconds. (How much time each chunk has to be
 		computed). Default value is $timeout s.
-	--resume=FILE
-		Filename of a file used for resuming. If this is specified, then Bonsai will try to
-		resume from it and then write progress data into it.
-		Resuming is disabled by default.
 	--width=WIDTH
 	--height=WIDTH
         	Output resolution. If only one of these is used, then the other one
@@ -215,3 +249,57 @@ EOT
 
 	exit;
 }
+
+print ID_STRING, "\n\n";
+
+our $commandLine = $0 . ' ' . join(' ', @ARGV);
+
+my $result = GetOptions(
+	'help' => \&usage,
+	'chunksize=i' => \$chunkSize,
+	'width=i' => \$widthOption,
+	'height=i' => \$heightOption,
+	'output=s' => \$output,
+	'port=i' => \$port,
+	'timeout=i' => \$timeout);
+
+print "No input files.\n\n" and usage() unless @ARGV;
+print "Only single input file is allowed.\n\n" and usage() if @ARGV > 1;
+
+
+my $scene = loadScene();
+
+initStatus($scene);
+
+#the server code is shamelessly copied from example in perlipc.
+statusPrint "Starting the server\n";
+socket SERVER, PF_INET, SOCK_STREAM, getprotobyname('tcp') or die "socket: $!";
+setsockopt SERVER, SOL_SOCKET, SO_REUSEADDR, 1 or die "setsockopt: $!";
+bind SERVER, sockaddr_in($port, INADDR_ANY) or die "bind: $!";
+listen SERVER, SOMAXCONN or die "listen: $!";
+statusPrint "Server started, listening on port $port.\n";
+
+while(1){
+	my $paddr = accept(CLIENT, SERVER) || do {
+			# try again if accept() returned because a signal was received
+			next if $!{EINTR};
+			die "accept: $!";
+		};
+	my ($port, $iaddr) = sockaddr_in($paddr);
+	my $thr = threads->create('worker', *CLIENT, $scene, $port, $iaddr);
+	$thr->detach();
+}
+
+undefine $status;
+
+print "Writing to '$output'.\n";
+RadianceHDR::outputHDR(
+	$scene->{'outputFile'},
+	$scene->{'width'},
+	$scene->{'height'},
+	$scene->{'image'},
+	$commandLine,
+	ID_STRING);
+
+print "Bye bye\n";
+
