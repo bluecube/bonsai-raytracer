@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use threads;
+use threads::shared;
 use Getopt::Long;
 use List::Util qw(min max);
 use Socket;
@@ -187,7 +188,7 @@ sub loadScene(){
 	print "Output resolution: $width x $height; $count chunks, ",
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
-	$scene;
+	shared_clone($scene);
 }
 
 sub worker{
