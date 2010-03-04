@@ -1,8 +1,8 @@
 {
 	"camera": {
 		"sensorSize": [50e-3, 50e-3],
-		"focalDistance": 50e-3,
-		"fNumber": 5.0,
+		"focalLength": 50e-3,
+		"fNumber": 5.6,
 
 		"position": [0, 0, 2],
 		"lookAt": [15, 25, 10],
