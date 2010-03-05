@@ -5,7 +5,6 @@ package Scene;
 
 use Data::Dumper;
 use JSON::XS;
-use Math::VectorReal;
 use Math::MatrixReal;
 
 use constant PI => 4 * atan2(1, 1);
@@ -20,8 +19,9 @@ use constant DEFAULT_ASPECT => DEFAULT_SENSOR_WIDTH / DEFAULT_SENSOR_HEIGHT;
 use constant DEFAULT_FOCAL_LENGTH => 50e-3;
 use constant DEFAULT_F_NUMBER => 4.0;
 
-# number of samples per unit of aperture area.
-use constant DEFAULT_APERTURE_SAMPLES => 1024;
+# number of samples per (1 / PI) of aperture area.
+# Computation time is O(n) to this value.
+use constant DEFAULT_APERTURE_QUALITY => 1e3;
 
 # process camera settings and normalize its dimensions.
 # The real sensor is always 1 unit wide and (1 / aspect) high.
@@ -58,28 +58,70 @@ sub cameraSettings{
 	delete $_->{'fNumber'};
 
 	my $samples = $_->{'apertureDiameter'} * $_->{'apertureDiameter'};
-	if(defined($_->{'apertureSamples'})){
-		$samples = $samples * $_->{'apertureSamples'};
+	if(defined($_->{'apertureQuality'})){
+		$samples = $samples * $_->{'apertureQuality'};
 	}else{
-		$samples = $samples * DEFAULT_APERTURE_SAMPLES;
+		$samples = $samples * DEFAULT_APERTURE_QUALITY;
 	}
+	delete $_->{'apertureQuality'};
 	$samples = int($samples) + 1;
 	$_->{'apertureSamples'} = $samples;
 
 	# transformation matrix
-	my $position = vector(@{$_->{'position'}});
-	my $lookAt = vector(@{$_->{'lookAt'}});
-	my $up = vector(@{$_->{'upVector'}});
+
+	my $position;
+	if(defined($_->{'position'})){
+		$position = Math::MatrixReal->new_from_cols([$_->{'position'}]);
+		delete $_->{'position'};
+	}else{
+		$position = Math::MatrixReal->new_from_cols([0, 0, 0]);
+	}
+
+	my $lookAt;
+	if(defined($_->{'lookAt'})){
+		$lookAt = Math::MatrixReal->new_from_cols([$_->{'lookAt'}]);
+		delete $_->{'lookAt'};
+	}else{
+		$lookAt = Math::MatrixReal->new_from_cols([0, 0, 500]);
+	}
+
+	my $upVector;
+	if(defined($_->{'upVector'})){
+		$upVector = Math::MatrixReal->new_from_cols([$_->{'upVector'}]);
+		delete $_->{'upVector'};
+	}else{
+		$upVector = Math::MatrixReal->new_from_cols([0, 1, 0]);
+	}
 
 	my $zAxis = $lookAt - $position;
-	$zAxis->norm();
+	$zAxis /= $zAxis->length();
 
-	$up->norm();
-	my $xAxis = $upVector x $zAxis;
-	$xAxis->norm();
+	$upVector /= $upVector->length();
+	my $xAxis = $upVector->vector_product($zAxis);
+	$xAxis /= $xAxis->length();
 
-	my $yAxis = $zAxis x $xAxis;
+	my $yAxis = $zAxis->vector_product($xAxis);
 
+	# Matrix to add one dimension to the vectors
+	my $tmpMatrix = Math::MatrixReal->new_from_cols([
+		[1, 0, 0, 0],
+		[0, 1, 0, 0],
+		[0, 0, 1, 0]]);
+
+	# Rotations matrix:
+	my $matrix = Math::MatrixReal->new_from_cols([
+		$tmpMatrix * $xAxis,
+		$tmpMatrix * $yAxis,
+		$tmpMatrix * $zAxis,
+		[0, 0, 0, 1]]);
+
+	$position = -~($tmpMatrix * $position);
+	print $position, "\n";
+	
+	$matrix->assign_row(4, $position);
+	$matrix->assign(4, 4, 1);
+
+	$_->{'inverse_transform'} = $matrix->inverse();
 }
 
 sub load{
