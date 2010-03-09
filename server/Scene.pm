@@ -94,6 +94,7 @@ sub cameraSettings{
 	}
 
 	my $zAxis = $lookAt - $position;
+	$_->{'focus'} = $zAxis->length();
 	$zAxis /= $zAxis->length();
 
 	$upVector /= $upVector->length();
@@ -116,12 +117,36 @@ sub cameraSettings{
 		[0, 0, 0, 1]]);
 
 	$position = -~($tmpMatrix * $position);
-	print $position, "\n";
 	
 	$matrix->assign_row(4, $position);
 	$matrix->assign(4, 4, 1);
 
 	$_->{'inverse_transform'} = $matrix->inverse();
+}
+
+sub objects{
+	local $_ = shift;
+	$_->{'objects'} = [] unless defined($_->{'objects'}) &&
+		(ref($_->{'objects'}) eq 'ARRAY');
+	$_ = $_->{'objects'};
+
+	object($_) for (@$_);
+}
+
+sub object{
+	local $_ = shift;
+
+	my $type = $_->{'type'};
+	print "Object: $type\n";
+
+	if(defined($_->{'transform'})){
+		my $t = $_->{'transform'};
+		$_->{'transform'} = Math::MatrixReal->new_from_rows([
+			@t[0 .. 3],
+			@t[4 .. 7],
+			@t[8 .. 11],
+			@t[12 .. 15]]);
+	}
 }
 
 sub load{
@@ -140,6 +165,7 @@ sub load{
 
 	# First process the camera settings
 	cameraSettings($file);
+	objects($file);
 
 	print Dumper($file);
 exit;
