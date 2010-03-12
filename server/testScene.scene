@@ -20,7 +20,8 @@
 			]
 		},
 		{
-			"type": "CSG_and",
+			"type": "CSG",
+			"operation": "and",
 			"objects": [
 				{
 					"type": "cylinder"

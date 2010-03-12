@@ -7,6 +7,8 @@ use Data::Dumper;
 use JSON::XS;
 use Math::MatrixReal;
 
+use Raw;
+
 use constant PI => 4 * atan2(1, 1);
 
 # Our default camera uses full-frame sensor
@@ -26,9 +28,8 @@ use constant DEFAULT_APERTURE_QUALITY => 1e3;
 # process camera settings and normalize its dimensions.
 # The real sensor is always 1 unit wide and (1 / aspect) high.
 sub cameraSettings{
-	local $_ = shift;
 	$_->{'camera'} = {} unless defined($_->{'camera'});
-	$_ = $_->{'camera'};
+	local $_ = $_->{'camera'};
 
 	# focal length
 	$_->{'focalLength'} = DEFAULT_FOCAL_LENGTH unless defined($_->{'focalLength'});
@@ -74,7 +75,7 @@ sub cameraSettings{
 		$position = Math::MatrixReal->new_from_cols([$_->{'position'}]);
 		delete $_->{'position'};
 	}else{
-		$position = Math::MatrixReal->new_from_cols([0, 0, 0]);
+		$position = Math::MatrixReal->new_from_cols([[0, 0, 0]]);
 	}
 
 	my $lookAt;
@@ -82,7 +83,7 @@ sub cameraSettings{
 		$lookAt = Math::MatrixReal->new_from_cols([$_->{'lookAt'}]);
 		delete $_->{'lookAt'};
 	}else{
-		$lookAt = Math::MatrixReal->new_from_cols([0, 0, 500]);
+		$lookAt = Math::MatrixReal->new_from_cols([[0, 0, 500]]);
 	}
 
 	my $upVector;
@@ -90,7 +91,7 @@ sub cameraSettings{
 		$upVector = Math::MatrixReal->new_from_cols([$_->{'upVector'}]);
 		delete $_->{'upVector'};
 	}else{
-		$upVector = Math::MatrixReal->new_from_cols([0, 1, 0]);
+		$upVector = Math::MatrixReal->new_from_cols([[0, 1, 0]]);
 	}
 
 	my $zAxis = $lookAt - $position;
@@ -125,29 +126,53 @@ sub cameraSettings{
 }
 
 sub objects{
-	local $_ = shift;
 	$_->{'objects'} = [] unless defined($_->{'objects'}) &&
 		(ref($_->{'objects'}) eq 'ARRAY');
-	$_ = $_->{'objects'};
+	local $_ = $_->{'objects'};
 
-	object($_) for (@$_);
+	object() for (@$_);
 }
+
+# object types and their handlers:
+my %objectTypes = (
+	polygonal => sub{
+		my $ret = Raw::load($_->{'file'});
+
+		die $ret unless ref($ret);
+
+		delete $_->{'file'};
+		$_->{'vertices'} = $ret->{'vertices'};
+		$_->{'polygons'} = $ret->{'polygons'};
+	},
+
+	CSG => sub{
+		die "Operation must be specified" unless defined $_->{'operation'};
+		objects();
+	}
+);
 
 sub object{
-	local $_ = shift;
-
 	my $type = $_->{'type'};
-	print "Object: $type\n";
 
-	if(defined($_->{'transform'})){
-		my $t = $_->{'transform'};
-		$_->{'transform'} = Math::MatrixReal->new_from_rows([
-			@t[0 .. 3],
-			@t[4 .. 7],
-			@t[8 .. 11],
-			@t[12 .. 15]]);
-	}
+	die "Object type must be specified" unless defined($type);
+
+
+	&{$objectTypes{$type}}() if defined($objectTypes{$type});
+	#print "Object: $type\n";
+
+	
+
+#	if(defined($_->{'transform'})){
+#		my $t = $_->{'transform'};
+#		$_->{'transform'} = Math::MatrixReal->new_from_rows([
+#			@$t[0 .. 3],
+#			@$t[4 .. 7],
+#			@$t[8 .. 11],
+#			@$t[12 .. 15]]);
+#	}
 }
+
+
 
 sub load{
 	my $filename = shift;
@@ -157,20 +182,17 @@ sub load{
 
 	open(my $fh, '<', $filename) or die $!;
 
-	my $file = decode_json <$fh>;
+	local $_ = decode_json <$fh>;
 
 	close $fh;
 
-	print Dumper($file);
+	cameraSettings();
+	objects();
 
-	# First process the camera settings
-	cameraSettings($file);
-	objects($file);
+	print Dumper($_);
 
-	print Dumper($file);
 exit;
-
-	$file;
+	$_;
 }
 
 1;
