@@ -54,9 +54,8 @@ sub readMatrix{
 			[@{$t}[4 .. 7]],
 			[@{$t}[8 .. 11]],
 			[@{$t}[12 .. 15]]]);
-	}
 
-	$t;
+	return $t;
 }
 
 # process camera settings and normalize its dimensions.
@@ -168,22 +167,22 @@ sub objects{
 }
 
 sub object{
-	my $type = $_->{'type'};
-
-	die("Object type must be specified") unless defined($type);
-
-
-	&{$objectTypes{$type}}() if defined($objectTypes{$type});
-	#print "Object: $type\n";
-
-	
-
-	if(defined($_->{'transform'})){
-		$_->{'transform'} = readMatrix($_->{'transform'})
-	}else{
-		$_->{'transform'} = 
-	}
-	
+#	my $type = $_->{'type'};
+#	
+#	die("Object type must be specified") unless defined $type;
+#	
+#	
+#	&{$objectTypes{$type}}() if defined($objectTypes{$type});
+#	#print "Object: $type\n";
+#	
+#	
+#	
+#	if(defined($_->{'transform'})){
+#		$_->{'transform'} = readMatrix($_->{'transform'})
+#	}else{
+#		#$_->{'transform'} = 
+#	}
+#	
 }
 
 

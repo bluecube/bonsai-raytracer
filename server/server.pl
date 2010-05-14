@@ -9,9 +9,11 @@ use Getopt::Long;
 use List::Util qw(min max);
 use Socket;
 use Term::ProgressBar;
+use Data::Dumper;
 
 use Scene;
 use RadianceHDR;
+use SharedDefs;
 
 use constant ID_STRING => "Bonsai raytracer server v0.1";
 
@@ -21,14 +23,17 @@ use constant DEFAULT_RESOLUTION => 800;
 use constant DEFAULT_EXTENSION => '.hdr';
 use constant DEFAULT_PORT => 23232;
 
+our $sharedDefs = SharedDefs::load_shared_defs('../client/shared_defs.h');
+
 # Configuration
+
 our $chunkSize = DEFAULT_CHUNKSIZE;
 our $widthOption;
 our $heightOption;
 our $timeout = DEFAULT_CHUNKTIMEOUT;
 our $resume;
 our $output;
-our $port = DEFAULT_PORT;
+our $port = $sharedDefs->{DEFAULT_PORT};
 
 # Status stuff
 our $status;
@@ -266,7 +271,6 @@ my $result = GetOptions(
 
 print "No input files.\n\n" and usage() unless @ARGV;
 print "Only single input file is allowed.\n\n" and usage() if @ARGV > 1;
-
 
 my $scene = loadScene();
 
