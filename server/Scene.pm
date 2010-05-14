@@ -25,6 +25,40 @@ use constant DEFAULT_F_NUMBER => 4.0;
 # Computation time is O(n) to this value.
 use constant DEFAULT_APERTURE_QUALITY => 1e3;
 
+# object types and their handlers:
+my %objectTypes = (
+	polygonal => sub{
+		my $ret = Raw::load($_->{'file'});
+
+		die $ret unless ref($ret);
+
+		delete $_->{'file'};
+		$_->{'vertices'} = $ret->{'vertices'};
+		$_->{'polygons'} = $ret->{'polygons'};
+	},
+
+	CSG => sub{
+		die "Operation must be specified" unless defined $_->{'operation'};
+		objects();
+	}
+);
+
+sub readMatrix{
+	my $t = shift;
+
+	die "4x4 matrix (array of 16 numbers) expected" unless
+		ref($t) eq 'ARRAY' && @$t == 16;
+
+	$t = Math::MatrixReal->new_from_rows([
+			[@{$t}[0 .. 3]],
+			[@{$t}[4 .. 7]],
+			[@{$t}[8 .. 11]],
+			[@{$t}[12 .. 15]]]);
+	}
+
+	$t;
+}
+
 # process camera settings and normalize its dimensions.
 # The real sensor is always 1 unit wide and (1 / aspect) high.
 sub cameraSettings{
@@ -133,28 +167,10 @@ sub objects{
 	object() for (@$_);
 }
 
-# object types and their handlers:
-my %objectTypes = (
-	polygonal => sub{
-		my $ret = Raw::load($_->{'file'});
-
-		die $ret unless ref($ret);
-
-		delete $_->{'file'};
-		$_->{'vertices'} = $ret->{'vertices'};
-		$_->{'polygons'} = $ret->{'polygons'};
-	},
-
-	CSG => sub{
-		die "Operation must be specified" unless defined $_->{'operation'};
-		objects();
-	}
-);
-
 sub object{
 	my $type = $_->{'type'};
 
-	die "Object type must be specified" unless defined($type);
+	die("Object type must be specified") unless defined($type);
 
 
 	&{$objectTypes{$type}}() if defined($objectTypes{$type});
@@ -162,16 +178,13 @@ sub object{
 
 	
 
-#	if(defined($_->{'transform'})){
-#		my $t = $_->{'transform'};
-#		$_->{'transform'} = Math::MatrixReal->new_from_rows([
-#			@$t[0 .. 3],
-#			@$t[4 .. 7],
-#			@$t[8 .. 11],
-#			@$t[12 .. 15]]);
-#	}
+	if(defined($_->{'transform'})){
+		$_->{'transform'} = readMatrix($_->{'transform'})
+	}else{
+		$_->{'transform'} = 
+	}
+	
 }
-
 
 
 sub load{
@@ -189,7 +202,7 @@ sub load{
 	cameraSettings();
 	objects();
 
-	print Dumper($_);
+#	print Dumper($_);
 
 exit;
 	$_;
