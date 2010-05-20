@@ -26,7 +26,26 @@ struct net_json{
 };
 
 /**
+ * Read a line from a socket to a print buffer buf.
+ * Calls error() in case of any problems.
+ */
+static void read_line(int fd, struct printbuf *buf){
+	printbuf_reset(buf);
+
+	char c;
+	do{
+		if(read(fd, &c, 1) == -1){
+			error(errno, NULL);
+		}
+		if(printbuf_memappend(buf, &c, 1) == -1){
+			error(errno, NULL);
+		}
+	}while(c != '\n');
+}
+
+/**
  * Allocate a new empty connection.
+ * Calls error() in case of any problems.
  */
 static struct net_json *net_json_new(){
 	struct net_json *connection;
@@ -140,5 +159,25 @@ void net_json_write(struct net_json *connection, json_object *message){
 	json_object_put(message);
 }
 
-json_object *net_json_read(struct net_json *connection);
+/**
+ * Read a line from the connection and parse it as a json object.
+ * The returned object has ref count 1.
+ */
+json_object *net_json_read(struct net_json *connection){
+	read_line(connection->fd, connection->buf);
+
+	json_object *obj = json_tokener_parse_ex(connection->tok,
+		connection->buf->buf, connection->buf->bpos);
+	
+	if(obj == NULL){
+		error(errno, NULL);
+	}
+
+	if(is_error(obj)){
+		error(0, "Error in JSON data (%s).",
+			json_tokener_errors[-(unsigned long)obj]);
+	}
+
+	return obj;
+}
 
