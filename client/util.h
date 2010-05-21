@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-extern const char *progname;
-
 void debug(const char *fmt, ...);
 
 void error(int error, const char *fmt, ...);

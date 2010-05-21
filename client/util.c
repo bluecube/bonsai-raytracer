@@ -6,17 +6,11 @@
 #include <stdarg.h>
 #include <errno.h>
 
-const char *progname = NULL;
-
 /**
  * Print a formated error message.
  */
 static void print_error(int error, const char *fmt, va_list va){
 	flockfile(stderr);
-
-	if(progname){
-		fprintf(stderr, "%s: ", progname);
-	}
 
 	if(fmt){
 		vfprintf(stderr, fmt, va);
