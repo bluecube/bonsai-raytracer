@@ -166,6 +166,8 @@ void net_json_write(struct net_json *connection, json_object *message){
 json_object *net_json_read(struct net_json *connection){
 	read_line(connection->fd, connection->buf);
 
+	json_tokener_reset(connection->tok);
+
 	json_object *obj = json_tokener_parse_ex(connection->tok,
 		connection->buf->buf, connection->buf->bpos);
 	
