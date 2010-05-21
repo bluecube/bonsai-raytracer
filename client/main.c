@@ -1,83 +1,106 @@
-#include <netdb.h>
+#include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+
 #include <unistd.h>
 
-#include <json/json.h>
-
-#include "shared_defs.h"
+#include "net_json.h"
 #include "object.h"
+#include "shared_defs.h"
+#include "util.h"
 
-#define CLIENT_VERSION \
-	#CLIENT_VERSION_MAJOR "." \
-	#CLIENT_VERSION_MINOR "." \
-	#CLIENT_VERSION_REV
+#define BUFFER_LEN 64
 
 void usage(const char *argv0){
 	printf("Usage:\n\n");
 
+	printf("%s --help\n", argv0);
+	printf("\tPrint this message and exit succesfully.\n");
 	printf("%s host [port]\n", argv0);
+	printf("\tConnect to the server and start rendering.\n");
 }
 
 /**
- * Resolve address, create a socket, connect and return it.
- * Calls exit() if there is a problem.
- * \param addr address in format host[:service]
- * \note This is taken from an example in getaddrinfo manpage.
+ * Send the hello message imediately after connecting.
  */
-int create_socket(const char *host, const char *port){
-	struct addrinfo hints;
-	struct addrinfo *result, *rp;
-
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = 0;
-	hints.ai_protocol = 0;
-
-	int code = getaddrinfo(host, port, &hints, &result);
-	if(code != 0){
-		fprintf(stderr, "getaddrinfo() failed: %s\n", gai_strerror(code));
-		exit(EXIT_FAILURE);
-	}
-	/* Try connecting to all of the returned addresses until
-	 * one connection succeeds. */
-	int sfd;
-	for(rp = result; rp != NULL; rp = rp->ai_next){
-		sfd =  socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if(sfd == -1){
-			continue;
-		}
-
-		if(connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1){
-			break;
-		}
-
-		close(sfd);
+void send_hello(struct net_json *connection){
+	char name[BUFFER_LEN];
+	if(gethostname(name, BUFFER_LEN)){
+		error(errno, NULL);
 	}
 
-	freeaddrinfo(result);
+	json_object *message = json_object_new_array();
+	json_object_array_add(message, json_object_new_string("Hello"));
+	json_object_array_add(message, json_object_new_string(name));
+	
+	json_object *version = json_object_new_array();
+	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_MAJOR));
+	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_MINOR));
+	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_REV));
 
-	if(rp == NULL){
-		fprintf(stderr, "Could not connect\n");
-		exit(EXIT_FAILURE);
-	}
+	json_object_array_add(message, version);
+	
+	net_json_write(connection, message);
+}
 
-	return sfd;
+bool get_job(struct net_json *connection){
+printf("getting job");
+	json_object *obj = net_json_read(connection);
+printf("have job");
+	
+	puts(json_object_to_json_string(obj));
+	json_object_put(obj);
+
+	return false;
 }
 
 int main(int argc, char **argv){
+	printf("Bonsai raytracer client v%d.%d.%d\n\n",
+		CLIENT_VERSION_MAJOR,
+		CLIENT_VERSION_MINOR,
+		CLIENT_VERSION_REV);
+
 	if(argc < 2 || argc > 3){
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	int sfd = create_socket(argv[1], argc >= 3 ? argv[2] : "23232");
-	
-	write(sfd, "Hello world\n", 12);
+	if(
+		argv[1][0] == '-' &&
+		argv[1][1] == '-' &&
+		argv[1][2] == 'h' &&
+		argv[1][3] == 'e' &&
+		argv[1][4] == 'l' &&
+		argv[1][5] == 'p'){
 
-	close(sfd);
+		usage(argv[0]);
+		return EXIT_SUCCESS;
+	}
+		
+
+	char defaultPort[BUFFER_LEN];
+	snprintf(defaultPort, BUFFER_LEN, "%d", DEFAULT_PORT);
+
+	struct net_json *connection = net_json_connect(argv[1],
+		argc >= 3 ? argv[2] : defaultPort);
+	
+	send_hello(connection);
+
+printf("before getting job\n");
+	while(1){
+printf("before getting job\n");
+		bool status = get_job(connection);
+
+		if(!status){
+			break;
+		}
+
+		//work(connection);
+		//send_output(connection);
+	}
+
+	net_json_close(connection);
 }
+

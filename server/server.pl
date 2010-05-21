@@ -10,6 +10,7 @@ use List::Util qw(min max);
 use Socket;
 use Term::ProgressBar;
 use Data::Dumper;
+use JSON::XS;
 
 use Scene;
 use RadianceHDR;
@@ -115,7 +116,9 @@ sub loadScene(){
 	my $file = shift @ARGV;
 
 	print "Loading scene from '$file'.\n";
-	my $scene = Scene::load($file);
+	my $scene = {};
+
+	my $data = Scene::load($file);
 	print "Loaded.\n";
 
 	if(!defined($output)){
@@ -130,34 +133,34 @@ sub loadScene(){
 	my $width;
 	my $height;
 
+	my $aspect = $data->{'camera'}->{'aspect'};
+
 	if(defined($widthOption) && defined($heightOption)){
-		if($heightOption * $scene->{'aspect'} > $widthOption){
+		if($heightOption * $aspect > $widthOption){
 			$width = $widthOption;
-			$height = $widthOption / $scene->{'aspect'};
+			$height = $widthOption / $aspect;
 		}else{
-			$width = $heightOption * $scene->{'aspect'};
+			$width = $heightOption * $aspect;
 			$height = $heightOption;
 		}
 	}elsif(defined($widthOption)){
 		$width = $widthOption;
-		$height = $widthOption / $scene->{'aspect'};
+		$height = $widthOption / $aspect;
 	}elsif(defined($heightOption)){
-		$width = $heightOption * $scene->{'aspect'};
+		$width = $heightOption * $aspect;
 		$height = $heightOption;
 	}else{
-		if($scene->{'aspect'} > 1){
+		if($aspect > 1){
 			$width = DEFAULT_RESOLUTION;
-			$height = DEFAULT_RESOLUTION / $scene->{'aspect'};
+			$height = DEFAULT_RESOLUTION / $aspect;
 		}else{
-			$width = DEFAULT_RESOLUTION * $scene->{'aspect'};
+			$width = DEFAULT_RESOLUTION * $aspect;
 			$height = DEFAULT_RESOLUTION;
 		}
 	}
 
 	$width = int($width);
 	$height = int($height);
-
-	my @image = ();
 
 	my $count = 0;
 
@@ -166,21 +169,15 @@ sub loadScene(){
 		my $len = min($chunkRows, $height - $y);
 
 		push @{$scene->{'availableChunks'}}, {
-			'top' => $y,
 			'height' => $len,
 			'scene' => $scene,
+			'data' => encode_json({'top' => $y, 'height' => $len, 'type' => 'chunk'}),
 			};
 	
-		if($count & 1){
-			push @image, ([0.5, 0, 0]) x ($width * $len);
-		}else{
-			push @image, ([0.12, 0.3, 0]) x ($width * $len);
-		}
-		
 		++$count;
 	}
 
-	$scene->{'image'} = \@image;
+	#$scene->{'image'} = ([0, 0, 0]) x ($width * $height);
 
 	$scene->{'width'} = $width;
 	$scene->{'height'} = $height;
@@ -193,7 +190,22 @@ sub loadScene(){
 	print "Output resolution: $width x $height; $count chunks, ",
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
+	$data->{'width'} = $width;
+	$data->{'height'} = $height;
+	$data->{'type'} = 'scene';
+	$scene->{'data'} = encode_json($data);
+
 	shared_clone($scene);
+}
+
+sub check_hello{
+	my $message = shift;
+
+	ref($message) eq 'ARRAY' &&
+	$message->[0] eq 'Hello' &&
+	ref($message->[2]) eq 'ARRAY' &&
+	scalar(@{$message->[2]}) == 3;
+
 }
 
 sub worker{
@@ -202,15 +214,39 @@ sub worker{
 	my $port = shift;
 	my $iaddr = shift;
 
-	my $name = gethostbyaddr($iaddr, AF_INET);
+	statusPrint "Connection from ", inet_ntoa($iaddr), " at port $port";
 
-	statusPrint "connection from $name [", inet_ntoa($iaddr), "] at port $port";
+	my $message = decode_json(<CLIENT>);
+	
+	if(!check_hello($message)){
+		statusPrint "Protocol error (hello)";
+		return;
+	}
 
-	my $chunk = nextChunk($scene);
+	my $name = $message->[1];
+	my @version = @{$message->[2]};
+	statusPrint "Client \"$name\" is version ", join(".", @version);
 
-	sleep 2;
+	if($version[0] != $sharedDefs->{'CLIENT_VERSION_MAJOR'} ||
+		$version[1] != $sharedDefs->{'CLIENT_VERSION_MINOR'}){
+		statusPrint "Wrong version";
+		close CLIENT;
+		return;
+	}
+	
+	while(1){
+		my $chunk = nextChunk($scene);
+	
+		print CLIENT $scene->{'data'}, "\n";
+		print CLIENT $chunk->{'data'}, "\n";
+		sleep 2;
+	
+		failChunk($chunk);
 
-	failChunk($chunk);
+		last;
+	}
+
+	close CLIENT;
 
 };
 

@@ -201,9 +201,7 @@ sub load{
 	cameraSettings();
 	objects();
 
-#	print Dumper($_);
-
-exit;
+	delete $_->{'camera'}->{'inverse_transform'};
 	$_;
 }
 
