@@ -1,3 +1,7 @@
+/**
+ * \file
+ * Client entry point and vase of the network protocol.
+ */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,15 +29,10 @@ void usage(const char *argv0){
 /**
  * Send the hello message imediately after connecting.
  */
-void send_hello(struct net_json *connection){
-	char name[BUFFER_LEN];
-	if(gethostname(name, BUFFER_LEN)){
-		error(errno, NULL);
-	}
-
+void send_hello(struct net_json *connection, const char *hostname){
 	json_object *message = json_object_new_array();
 	json_object_array_add(message, json_object_new_string("Hello"));
-	json_object_array_add(message, json_object_new_string(name));
+	json_object_array_add(message, json_object_new_string(hostname));
 	
 	json_object *version = json_object_new_array();
 	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_MAJOR));
@@ -45,15 +44,34 @@ void send_hello(struct net_json *connection){
 	net_json_write(connection, message);
 }
 
-bool get_job(struct net_json *connection){
-printf("getting job");
-	json_object *obj = net_json_read(connection);
-printf("have job");
-	
-	puts(json_object_to_json_string(obj));
-	json_object_put(obj);
+/**
+ * Read commands from input and decide what to do with them.
+ */
+void work(struct net_json *connection){
+	bool keepRunning = true;
+	while(keepRunning){
+		json_object *obj = net_json_read(connection);
 
-	return false;
+		json_object *typeObj = json_object_object_get(obj, "type");
+		if(typeObj == NULL){
+			error(0, "Protocol error (message type not specified).");
+		}
+
+		const char *type = json_object_get_string(typeObj);
+
+		if(!strcmp(type, "scene")){
+			printf("Would load scene\n");
+		}else if(!strcmp(type, "chunk")){
+			printf("Would process scene\n");
+		}else if(!strcmp(type, "finished")){
+			keepRunning = false;
+			return;
+		}else{
+			error(0, "Protocol error (unknow message type \"%s\").", type);
+		}
+
+		json_object_put(obj);
+	}
 }
 
 int main(int argc, char **argv){
@@ -79,28 +97,27 @@ int main(int argc, char **argv){
 		return EXIT_SUCCESS;
 	}
 		
-
-	char defaultPort[BUFFER_LEN];
-	snprintf(defaultPort, BUFFER_LEN, "%d", DEFAULT_PORT);
-
-	struct net_json *connection = net_json_connect(argv[1],
-		argc >= 3 ? argv[2] : defaultPort);
 	
-	send_hello(connection);
-
-printf("before getting job\n");
-	while(1){
-printf("before getting job\n");
-		bool status = get_job(connection);
-
-		if(!status){
-			break;
-		}
-
-		//work(connection);
-		//send_output(connection);
+	struct net_json *connection;
+	if(argc >= 3){
+		connection = net_json_connect(argv[1], argv[2]);
+	}else{
+		char defaultPort[BUFFER_LEN];
+		snprintf(defaultPort, BUFFER_LEN, "%d", DEFAULT_PORT);
+		connection = net_json_connect(argv[1], defaultPort);
 	}
+	
+	
+	char hostname[BUFFER_LEN];
+	if(gethostname(hostname, BUFFER_LEN)){
+		error(errno, NULL);
+	}
+	send_hello(connection, hostname);
+
+	work(connection);
 
 	net_json_close(connection);
+	
+	return EXIT_SUCCESS;
 }
 
