@@ -12,6 +12,8 @@
 
 #include "net_json.h"
 #include "object.h"
+#include "scene.h"
+#include "scene_building.h"
 #include "shared_defs.h"
 #include "util.h"
 
@@ -49,6 +51,9 @@ void send_hello(struct net_json *connection, const char *hostname){
  */
 void work(struct net_json *connection){
 	bool keepRunning = true;
+
+	struct scene *s = NULL;
+
 	while(keepRunning){
 		json_object *obj = net_json_read(connection);
 
@@ -60,7 +65,10 @@ void work(struct net_json *connection){
 		const char *type = json_object_get_string(typeObj);
 
 		if(!strcmp(type, "scene")){
-			printf("Would load scene\n");
+			if(s){
+				scene_destroy(s);
+			}
+			s = scene_build(obj);
 		}else if(!strcmp(type, "chunk")){
 			printf("Would process scene\n");
 		}else if(!strcmp(type, "finished")){
