@@ -12,7 +12,9 @@
 #define Y 1
 #define Z 2
 
-typedef float vector[3];
+#define DIMENSIONS 3
+
+typedef float vector[DIMENSIONS];
 
 void vector_add(vector *v1, vector *v2, vector *ret);
 float vector_dot(vector *v1, vector *v2);
