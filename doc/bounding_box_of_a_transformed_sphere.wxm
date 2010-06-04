@@ -1,18 +1,23 @@
 /* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
 /* [ Created with wxMaxima version 0.8.2 ] */
 
+/* [wxMaxima: title   start ]
+Bounding box of a transformed sphere
+   [wxMaxima: title   end   ] */
+
 /* [wxMaxima: comment start ]
-wxMaxima 0.8.2 http://wxmaxima.sourceforge.net
-Maxima 5.18.1 http://maxima.sourceforge.net
-Using Lisp SBCL 1.0.19-gentoo
-Distributed under the GNU Public License. See the file COPYING.
-Dedicated to the memory of William Schelter.
-The function bug_report() provides bug reporting information.
+For every axis we're looking for a plane perpendicular to that axis
+that intersects the transformed sphere in exactly one point.
    [wxMaxima: comment end   ] */
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-invTransform: matrix([t0, t1, t2, t3],[t4, t5, t6, t7], [t8, t9, t10, t11], [0, 0, 0, 1]);
+Transform: matrix([t0, t1, t2, t3],[t4, t5, t6, t7], [t8, t9, t10, t11], [0, 0, 0, 1]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: hide output   ] */
+/* [wxMaxima: input   start ] */
+invTransform: invert(Transform);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: hide output   ] */
@@ -30,6 +35,12 @@ x: invTransform . transformedX;
 equation: x . x = 2;
 /* [wxMaxima: input   end   ] */
 
+/* [wxMaxima: comment start ]
+Now all of the important variables are defined.
+We will be solving equation for the axes and taking parameters
+that result in a single root as an input equation for the next step.
+   [wxMaxima: comment end   ] */
+
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots01: solve([equation], [x2]);
@@ -42,7 +53,7 @@ roots0: solve(roots01[1] - roots01[2], x1);
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-minmax0: radcan(solve(roots0[1] - roots0[2], x0));
+minmax0: solve(roots0[1] - roots0[2], x0);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: hide output   ] */
@@ -57,7 +68,7 @@ roots1: solve(roots12[1] - roots12[2], x2);
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-minmax1: radcan(solve(roots1[1] - roots1[2], x1));
+minmax1: solve(roots1[1] - roots1[2], x1);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: hide output   ] */
@@ -72,19 +83,11 @@ roots2: solve(roots20[1] - roots20[2], x0);
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-minmax2: radcan(solve(roots2[1] - roots2[2], x2));
+minmax2: solve(roots2[1] - roots2[2], x2);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-minmax0;
-/* [wxMaxima: input   end   ] */
-
-/* [wxMaxima: input   start ] */
-minmax1;
-/* [wxMaxima: input   end   ] */
-
-/* [wxMaxima: input   start ] */
-minmax2;
+append(minmax0, minmax1, minmax2);
 /* [wxMaxima: input   end   ] */
 
 /* Maxima can't load/batch files which end with a comment! */
