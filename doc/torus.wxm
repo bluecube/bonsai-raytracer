@@ -1,0 +1,121 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 0.8.2 ] */
+
+/* [wxMaxima: title   start ]
+Torus
+   [wxMaxima: title   end   ] */
+
+/* [wxMaxima: section start ]
+Surface equation
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: input   start ] */
+ray: matrix([o0], [o1], [o2])+ t * matrix([d0], [d1], [d2]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+center: matrix([c0], [c1], [0]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+center_eq: center.center = 1;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+plane_normal: matrix(center[2], -center[1], [0]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+x: matrix([x0], [x1], [x2]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+surface_eq: (x - center).(x - center) = r^2;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+surface_eq2: plane_normal . x = 0;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+c0_value: solve(surface_eq2, c0);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+center_eq, c0_value;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+c1_squared_value: solve(%, c1^2);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+surface_eq, c0_value;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+radcan(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(% * x1^2);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+radcan(% + c1 * (2 * x1^3 + 2 * x0^2 * x1) - r^2 * x1^2);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+factorsum(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+%^2, c1_squared_value;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+factorsum(%);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+% / x1^4;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+torus_eq: factorsum(% - rhs(%));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+torus_eq, x0 = ray[1], x1 = ray[2], x2 = ray[3];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: section start ]
+Torus - ray intersection
+   [wxMaxima: section end   ] */
+
+/* [wxMaxima: input   start ] */
+torus_ray_intersection: ratsimp(ratsubst(1, d0^2 + d1^2 + d2^2, %));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(ratcoef(lhs(torus_ray_intersection), t, 4));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(ratcoef(lhs(torus_ray_intersection), t, 3));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(ratcoef(lhs(torus_ray_intersection), t, 2));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(ratcoef(lhs(torus_ray_intersection), t, 1));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ratsimp(ratcoef(lhs(torus_ray_intersection), t, 0));
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$
