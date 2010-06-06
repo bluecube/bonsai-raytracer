@@ -4,8 +4,8 @@
 #include "vector.h"
 
 struct ray{
-	vector origin;
-	vector direction;
+	struct vector origin;
+	struct vector direction;
 };
 
 #endif

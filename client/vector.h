@@ -14,14 +14,19 @@
 
 #define DIMENSIONS 3
 
-typedef float vector[DIMENSIONS];
+struct vector{
+	float p[DIMENSIONS];
+};
 
-void vector_add(vector *v1, vector *v2, vector *ret);
-float vector_dot(vector *v1, vector *v2);
-void vector_multiply(vector *v1, float f, vector *ret);
-void vector_divide(vector *v1, float f, vector *ret);
-void vector_normalize(vector *v, vector *ret);
-void vector_set_normalized(float x, float y, float z, vector *ret);
+void vector_add(const struct vector *v1, const struct vector *v2, struct vector *ret);
+float vector_dot(const struct vector *v1, const struct vector *v2);
+float vector_length(const struct vector *v);
+float vector_length_squared(const struct vector *v);
+void vector_multiply(const struct vector *v1, float f, struct vector *ret);
+void vector_divide(const struct vector *v1, float f, struct vector *ret);
+void vector_normalize(const struct vector *v, struct vector *ret);
+void vector_set_normalized(float x, float y, float z, struct vector *ret);
+void vector_set(float x, float y, float z, struct vector *ret);
 
 // ...
 

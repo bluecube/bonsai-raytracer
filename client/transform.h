@@ -12,8 +12,13 @@
 
 #include "vector.h"
 
-typedef float transform[4 * 3];
+struct transform{
+	float p[4 * 3];
+};
 
-void transform_vector(transform t, vector v, vector ret);
+void transform_vector(const struct transform *t, const struct vector *v,
+	struct vector *ret);
+
+void transform_invert(const struct transform *t, struct transform *ret);
 
 #endif

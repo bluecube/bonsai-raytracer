@@ -2,18 +2,29 @@
 #define BONSAI_CLIENT_BOUNDING_BOX_H
 
 #include "vector.h"
+#include "transform.h"
 
 /**
  * Axis-aligned box.
- * Nonempty box has p1[i] < p2[i] for i = X, Y, Z.
+ * Nonempty box has p[0][i] < p[1][i] for i = X, Y, Z.
  */
 struct bounding_box{
-	vector p1;
-	vector p2;
+	struct vector p[2];
 };
 
-double bounding_box_is_nonempty(struct bounding_box *b);
-double bounding_box_area(struct bounding_box *b);
-double bounding_box_volume(struct bounding_box *b);
+void bounding_box_union(const struct bounding_box *b1,
+	const struct bounding_box *b2,
+	struct bounding_box *ret);
+void bounding_box_intersection(const struct bounding_box *b1,
+	const struct bounding_box *b2,
+	struct bounding_box *ret);
+void bounding_box_transform(const struct bounding_box *b,
+	const struct transform *t,
+	struct bounding_box *ret);
+
+void bounding_box_fix_order(struct bounding_box *b);
+
+double bounding_box_area(const struct bounding_box *b);
+double bounding_box_volume(const struct bounding_box *b);
 
 #endif

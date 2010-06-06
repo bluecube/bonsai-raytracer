@@ -29,12 +29,11 @@ void renderer_render(struct scene *s, unsigned y0, unsigned y1, struct color *pi
 			color_black(pixmap);
 			for(unsigned i = 0; i < s->sampleCount; ++i){
 				struct ray r;
-				r.origin[X] = 0;
-				r.origin[Y] = 0;
-				r.origin[Z] = 0;
+
+				vector_set(0, 0, 0, &(r.origin));
 				vector_set_normalized(
-					xx + random_float(0, inc),
-					yy + random_float(0, inc),
+					xx + random_number(0, inc),
+					yy + random_number(0, inc),
 					s->focalLength,
 					&r.direction);
 				
