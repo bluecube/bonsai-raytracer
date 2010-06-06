@@ -1,11 +1,13 @@
 CFILES = $(wildcard *.c)
 OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
+
 CFLAGS = -Wall -g -std=gnu99
-CFLAGS += $(shell pkg-config --cflags json)
 LDFLAGS = -Wall
-LDFLAGS += $(shell pkg-config --libs json)
 PROG = bonsai-client
+
+LDFLAGS += $(shell pkg-config --libs json)
+CFLAGS += $(shell pkg-config --cflags json)
 
 all: $(PROG)
 
@@ -16,7 +18,7 @@ clean:
 	rm -f $(OFILES) $(DEPFILES)
 
 %.d: %.c
-	$(CXX) -MM -MG $(CXXFLAGS) $< | sed '1 s|:| $@:|' > $@
+	$(CXX) -MM -MT $@ -MT $(@:.d=.o) -MF $@ $(CXXFLAGS) $<
 
 -include $(DEPFILES)
 
