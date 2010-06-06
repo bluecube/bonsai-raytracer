@@ -6,7 +6,9 @@
 
 		"position": [0, 0, 2],
 		"lookAt": [15, 25, 10],
-		"upVector": [1, 10, 0]
+		"upVector": [1, 10, 0],
+
+		"raysPerPx": 1000
 	},
 
 	"objects": [

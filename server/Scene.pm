@@ -21,9 +21,8 @@ use constant DEFAULT_ASPECT => DEFAULT_SENSOR_WIDTH / DEFAULT_SENSOR_HEIGHT;
 use constant DEFAULT_FOCAL_LENGTH => 50e-3;
 use constant DEFAULT_F_NUMBER => 4.0;
 
-# number of samples per (1 / PI) of aperture area.
-# Computation time is O(n) to this value.
-use constant DEFAULT_APERTURE_QUALITY => 1e3;
+# Default number of rays sent through each pixel.
+use constant DEFAULT_RAYS_PER_PX => 1e3;
 
 # object types and their handlers:
 my %objectTypes = (
@@ -91,15 +90,11 @@ sub cameraSettings{
 	}
 	delete $_->{'fNumber'};
 
-	my $samples = $_->{'apertureDiameter'} * $_->{'apertureDiameter'};
-	if(defined($_->{'apertureQuality'})){
-		$samples = $samples * $_->{'apertureQuality'};
+	if(!defined($_->{'raysPerPx'})){
+		$_->{'raysPerPx'} = DEFAULT_RAYS_PER_PX;
 	}else{
-		$samples = $samples * DEFAULT_APERTURE_QUALITY;
+		$_->{'raysPerPx'} = $_->{'raysPerPx'} * 1;
 	}
-	delete $_->{'apertureQuality'};
-	$samples = int($samples) + 1;
-	$_->{'apertureSamples'} = $samples;
 
 	# transformation matrix
 

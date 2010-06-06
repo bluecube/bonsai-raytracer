@@ -22,12 +22,12 @@ void renderer_render(struct scene *s, unsigned y0, unsigned y1, struct color *pi
 	float inc = 1 / (s->width - 1);
 
 	float yy = inc * (y0 - s->height / 2);
-	float weight = 1 / s->sampleCount;
+	float weight = 1 / s->raysPerPx;
 	for(unsigned y = y0; y < y1; ++y){
 		float xx = -0.5;
 		for(unsigned x = 0; x < s->width; ++x){
 			color_black(pixmap);
-			for(unsigned i = 0; i < s->sampleCount; ++i){
+			for(unsigned i = 0; i < s->raysPerPx; ++i){
 				struct ray r;
 
 				vector_set(0, 0, 0, &(r.origin));

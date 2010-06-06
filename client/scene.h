@@ -6,7 +6,7 @@
  * This contains some preprocessed values.
  */
 struct scene{
-	unsigned sampleCount;
+	unsigned raysPerPx;
 
 	float focalLength;
 	float apertureDiameter;
