@@ -3,7 +3,7 @@ OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
 
 CFLAGS = -Wall -g -std=gnu99
-LDFLAGS = -Wall
+LDFLAGS = -Wall -lm
 PROG = bonsai-client
 
 LDFLAGS += $(shell pkg-config --libs json)
