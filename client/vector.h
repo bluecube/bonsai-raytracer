@@ -2,7 +2,7 @@
  * \file
  * Vectors and operations on them.
  *
- * We're using column vectors.
+ * We're using row vectors.
  */
 
 #ifndef BONSAI_CLIENT_VECTOR_H
@@ -29,8 +29,6 @@ void vector_divide(const struct vector *v1, float f, struct vector *ret);
 void vector_normalize(const struct vector *v, struct vector *ret);
 void vector_set_normalized(float x, float y, float z, struct vector *ret);
 void vector_set(float x, float y, float z, struct vector *ret);
-void transform_vector(const struct vector *v, const struct transform *t, const struct vector *ret);
-
-// ...
+void transform_vector(const struct vector *v, const struct transform *t, struct vector *ret);
 
 #endif
