@@ -8,11 +8,23 @@
 
 /**
  * Print a formated error message.
+ * \param error Errno, or 0 if no error description should be printed.
+ * \param file File name of the error source, or NULL if
+ * file name should not be printed
+ * \param line Line number of the error source.
+ * Only used if #file is not NULL.
+ * \param func Function namer of the error source.
+ * Only used if #file is not NULL.
+ * \param fmt Printf-like format of the error message or NULL.
+ * \param va Varargs parameters to the message format.
+ * Only used if #fmt is not null.
  */
 static void print_error(int error, const char *file, int line,
 	const char *func, const char *fmt, va_list va){
 	
-	fprintf(stderr, "%s:%i/%s(): ", file, line, func);
+	if(file){
+		fprintf(stderr, "%s:%i/%s(): ", file, line, func);
+	}
 
 	if(fmt){
 		vfprintf(stderr, fmt, va);

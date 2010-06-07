@@ -12,8 +12,10 @@
 
 #include "vector.h"
 
+#define TRANSFORM_SIZE (DIMENSIONS * (DIMENSIONS + 1))
+
 struct transform{
-	float p[4 * 3];
+	float p[TRANSFORM_SIZE];
 };
 
 void transform_vector(const struct transform *t, const struct vector *v,

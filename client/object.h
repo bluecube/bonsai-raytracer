@@ -23,8 +23,8 @@ struct object{
 	
 	struct object *next;
 
-	float (*intersection)(const struct ray *r);
-	void (*get_normal)(const struct vector v, struct vector normal);
+	float (*get_intersection)(struct object *o, const struct ray *r);
+	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
 };
 
 struct object *object_new(const struct transform *t);
