@@ -12,7 +12,7 @@ that intersects the transformed sphere in exactly one point.
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-Transform: matrix([t0, t1, t2, t3],[t4, t5, t6, t7], [t8, t9, t10, t11], [0, 0, 0, 1]);
+Transform: matrix([t0, t1, t2, 0],[t3, t4, t5, 0], [t6, t7, t8, 0], [t9, t10, t11, 1]);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: hide output   ] */
@@ -20,17 +20,15 @@ Transform: matrix([t0, t1, t2, t3],[t4, t5, t6, t7], [t8, t9, t10, t11], [0, 0, 
 invTransform: invert(Transform);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-transformedX: matrix([x0], [x1], [x2], [1]);
+transformedX: matrix([x0, x1, x2, 1]);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
-x: invTransform . transformedX;
+x: transformedX . invTransform;
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 equation: x . x = 2;
 /* [wxMaxima: input   end   ] */
@@ -41,47 +39,38 @@ We will be solving equation for the axes and taking parameters
 that result in a single root as an input equation for the next step.
    [wxMaxima: comment end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots01: solve([equation], [x2]);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots0: solve(roots01[1] - roots01[2], x1);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 minmax0: solve(roots0[1] - roots0[2], x0);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots12: solve([equation], [x0]);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots1: solve(roots12[1] - roots12[2], x2);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 minmax1: solve(roots1[1] - roots1[2], x1);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots20: solve([equation], [x1]);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 roots2: solve(roots20[1] - roots20[2], x0);
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: hide output   ] */
 /* [wxMaxima: input   start ] */
 minmax2: solve(roots2[1] - roots2[2], x2);
 /* [wxMaxima: input   end   ] */

@@ -12,14 +12,12 @@
 
 #include "vector.h"
 
+
 #define TRANSFORM_SIZE (DIMENSIONS * (DIMENSIONS + 1))
 
 struct transform{
 	float p[TRANSFORM_SIZE];
 };
-
-void transform_vector(const struct transform *t, const struct vector *v,
-	struct vector *ret);
 
 void transform_invert(const struct transform *t, struct transform *ret);
 

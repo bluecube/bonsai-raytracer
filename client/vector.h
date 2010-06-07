@@ -14,6 +14,8 @@
 
 #define DIMENSIONS 3
 
+struct transform;
+
 struct vector{
 	float p[DIMENSIONS];
 };
@@ -27,6 +29,7 @@ void vector_divide(const struct vector *v1, float f, struct vector *ret);
 void vector_normalize(const struct vector *v, struct vector *ret);
 void vector_set_normalized(float x, float y, float z, struct vector *ret);
 void vector_set(float x, float y, float z, struct vector *ret);
+void transform_vector(const struct vector *v, const struct transform *t, const struct vector *ret);
 
 // ...
 
