@@ -15,8 +15,7 @@ struct scene{
 	unsigned height;
 
 	/**
-	 * This is really just to put it all
-	 * together to some working state soon.
+	 * This is really just to put it all together to some working state.
 	 * There's gonna be a kd-tree here :-).
 	 * \todo KD-tree instead of a linked list.
 	 */

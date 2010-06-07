@@ -38,8 +38,14 @@ struct object{
 	 * \pre #v is close to the surface of the object.
 	 */
 	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
+
+	/**
+	 * Virtual destructor :-)
+	 */
+	void (*destroy)(struct object *o);
 };
 
 struct object *object_new(const struct transform *t);
+void object_destroy(struct object *o);
 
 #endif
