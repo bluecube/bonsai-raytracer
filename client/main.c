@@ -59,7 +59,7 @@ void work(struct net_json *connection){
 
 		json_object *typeObj = json_object_object_get(obj, "type");
 		if(typeObj == NULL){
-			error(0, "Protocol error (message type not specified).");
+			protocol_error("Message type not specified.");
 		}
 
 		const char *type = json_object_get_string(typeObj);
@@ -75,7 +75,7 @@ void work(struct net_json *connection){
 			keepRunning = false;
 			return;
 		}else{
-			error(0, "Protocol error (unknow message type \"%s\").", type);
+			protocol_error("Unknow message type \"%s\".", type);
 		}
 
 		json_object_put(obj);
