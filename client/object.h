@@ -17,13 +17,26 @@ struct object{
 	struct bounding_box boundingBox;
 
 	/**
-	 * Transformation from world coordinates to object coordinates.
+	 * Transformation from object coordinates to world coordinates.
 	 */
 	struct transform invTransform;
 	
 	struct object *next;
 
+	/**
+	 * Get the first positive intersection point of the object.
+	 * \return Distance to the intersection (in object coordinates),
+	 * or a negative number if there is no intersection or all intersections
+	 * are negative.
+	 * Bounding box is not checked before this method is called.
+	 */
 	float (*get_intersection)(struct object *o, const struct ray *r);
+
+	/**
+	 * Get the normal vector of the object in a point #v.
+	 * The normal returned doesn't have to be normalized.
+	 * \pre #v is close to the surface of the object.
+	 */
 	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
 };
 

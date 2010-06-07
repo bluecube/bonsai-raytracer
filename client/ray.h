@@ -3,8 +3,14 @@
 
 #include "vector.h"
 
+/**
+ * A ray.
+ */
 struct ray{
+	/** Origin of the ray. */
 	struct vector origin;
+
+	/** Normalized direction of the ray. */
 	struct vector direction;
 };
 
