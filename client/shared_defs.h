@@ -5,7 +5,7 @@
  * \note The server's parser is kinda sensitive about the format of this file,
  * don't use any fancy preprocessor stuff.
  *
- * (only lines matching /^\s*#define\s[A-Z_0-9]+\s\S+.*$/ are used).
+ * (only lines matching \verbatim /^\s*#define\s[A-Z_0-9]+\s\S+.*$/ \endverbatim are used).
  */
 
 #ifndef BONSAI_CLIENT_SHARED_DEFS_H

@@ -10,7 +10,7 @@ void debug(const char *fmt, ...);
  * to stderr and exit with EXIT_FAILURE.
  * \param e Errno or 0 if error description
  * should not be printed.
- * \param fmt Custom error message or NULL.
+ * \param format Custom error message or NULL.
  */
 #define error(e, format, ...) \
 	error_internal((e), __FILE__, __LINE__, __func__, (format), ##__VA_ARGS__)
@@ -19,7 +19,7 @@ void debug(const char *fmt, ...);
  * Print a message and explanation of error code to stderr.
  * \param e Errno or 0 if error description
  * should not be printed.
- * \param fmt Custom error message or NULL.
+ * \param format Custom error message or NULL.
  */
 #define warning(e, format, ...) \
 	warning_internal((e), __FILE__, __LINE__, __func__, (format), ##__VA_ARGS__)
