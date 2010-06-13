@@ -130,6 +130,18 @@ sub loadScene(){
 		$scene->{'outputFile'} = $output;
 	}
 
+	my $title;
+	if(defined($data->{'title'})){
+		$title = $data->{'title'};
+	}else{
+		$title = $file;
+		$title =~ s|\.[^./]*$||;
+		$title =~ s|^.*/||;
+		$data->{'title'} = $title;
+	}
+
+	print "Scene title: \"$title\".\n";
+
 	my $width;
 	my $height;
 
