@@ -36,6 +36,8 @@ static void print_error(int error, const char *file, int line,
 		}
 		fputs(strerror(error), stderr);
 	}
+
+	fputc('\n', stderr);
 }
 
 /**
