@@ -190,8 +190,8 @@ sub loadScene(){
 	print "Output resolution: $width x $height; $count chunks, ",
 		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
 	
-	$data->{'width'} = $width;
-	$data->{'height'} = $height;
+	$data->{'width'} = $width + 0;
+	$data->{'height'} = $height + 0;
 	$data->{'type'} = 'scene';
 	$scene->{'data'} = encode_json($data);
 

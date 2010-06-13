@@ -42,6 +42,26 @@ my %objectTypes = (
 	}
 );
 
+# return an array ref representing the given matrix in the protocol
+sub writeMatrix{
+	my $m = shift;
+
+	return [
+		$m->element(1, 1) + 0,
+		$m->element(1, 2) + 0,
+		$m->element(1, 3) + 0,
+		$m->element(2, 1) + 0,
+		$m->element(2, 2) + 0,
+		$m->element(2, 3) + 0,
+		$m->element(3, 1) + 0,
+		$m->element(3, 2) + 0,
+		$m->element(3, 3) + 0,
+		$m->element(4, 1) + 0,
+		$m->element(4, 2) + 0,
+		$m->element(4, 3) + 0
+	]
+}
+
 sub readMatrix{
 	my $t = shift;
 
@@ -162,22 +182,22 @@ sub objects{
 }
 
 sub object{
-#	my $type = $_->{'type'};
-#	
-#	die("Object type must be specified") unless defined $type;
-#	
-#	
-#	&{$objectTypes{$type}}() if defined($objectTypes{$type});
-#	#print "Object: $type\n";
-#	
-#	
-#	
-#	if(defined($_->{'transform'})){
-#		$_->{'transform'} = readMatrix($_->{'transform'})
-#	}else{
-#		#$_->{'transform'} = 
-#	}
-#	
+	my $type = $_->{'type'};
+	
+	die("Object type must be specified") unless defined $type;
+	
+	if(defined($_->{'transform'})){
+		$_->{'transform'} = readMatrix($_->{'transform'});
+	}else{
+		$_->{'transform'} = Math::MatrixReal->new_diag([1, 1, 1, 1]); 
+	}
+	
+	
+	#&{$objectTypes{$type}}() if defined($objectTypes{$type});
+	print "Object: $type\n";
+	
+	
+	$_->{'transform'} = writeMatrix($_->{'transform'});
 }
 
 
