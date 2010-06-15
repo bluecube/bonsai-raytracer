@@ -4,5 +4,3 @@
 float random_number(float from, float to);
 
 #endif
-
-
