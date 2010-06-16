@@ -18,7 +18,7 @@ clean:
 	rm -f $(OFILES) $(DEPFILES)
 
 %.d: %.c
-	$(CXX) -MM -MT $@ -MT $(@:.d=.o) -MF $@ $(CXXFLAGS) $<
+	$(CC) $(CFLAGS) -MM -MT $@ -MT $(@:.d=.o) -MF $@ $<
 
 -include $(DEPFILES)
 
