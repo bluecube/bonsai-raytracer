@@ -21,6 +21,7 @@ struct vector{
 };
 
 void vector_add(const struct vector *v1, const struct vector *v2, struct vector *ret);
+void vector_substract(const struct vector *v1, const struct vector *v2, struct vector *ret);
 float vector_dot(const struct vector *v1, const struct vector *v2);
 float vector_length(const struct vector *v);
 float vector_length_squared(const struct vector *v);
@@ -29,6 +30,6 @@ void vector_divide(const struct vector *v1, float f, struct vector *ret);
 void vector_normalize(const struct vector *v, struct vector *ret);
 void vector_set_normalized(float x, float y, float z, struct vector *ret);
 void vector_set(float x, float y, float z, struct vector *ret);
-void transform_vector(const struct vector *v, const struct transform *t, struct vector *ret);
+void vector_transform(const struct vector *v, const struct transform *t, struct vector *ret);
 
 #endif

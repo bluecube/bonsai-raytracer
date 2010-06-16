@@ -16,7 +16,18 @@ void vector_add(const struct vector *v1, const struct vector *v2,
 }
 
 /**
- * Dot product of two vetcots, return output.
+ * Substract #v2 from #v1, store output in #ret..
+ */
+void vector_substract(const struct vector *v1, const struct vector *v2,
+	struct vector *ret){
+	
+	for(int i = 0; i < DIMENSIONS; ++i){
+		ret->p[i] = v1->p[i] - v2->p[i];
+	}
+}
+
+/**
+ * Dot product of two vetcors, return output.
  */
 float vector_dot(const struct vector *v1, const struct vector *v2){
 	float ret = 0;
@@ -92,7 +103,7 @@ void vector_set(float x, float y, float z, struct vector *ret){
 /**
  * Transform a vector with a transformation.
  */
-void transform_vector(const struct vector *v, const struct transform *t,
+void vector_transform(const struct vector *v, const struct transform *t,
 	struct vector *ret){
 
 	for(int i = 0; i < DIMENSIONS; ++i){
