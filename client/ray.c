@@ -14,10 +14,13 @@ void ray_from_points(struct ray *r, const struct vector *origin,
 
 /**
  * Normalize direction, compute inverse direction.
+ * \return Length of the direction vector before normalization.
  */
-void ray_prepare(struct ray *r){
+float ray_prepare(struct ray *r){
 	struct vector tmp;
-	vector_normalize(&(r->direction), &tmp);
+
+	float ret = vector_length(&r->direction);
+	vector_divide(&(r->direction), 1 / ret, &tmp);
 
 	r->direction = tmp;
 
@@ -25,15 +28,18 @@ void ray_prepare(struct ray *r){
 		r->invDirection.p[i] = 1 / tmp.p[i];
 	}
 
-	
+	return ret;
 }
 
 /**
  * Transform the ray.
+ * \return The transformed length of the transformed direction vector before
+ * normalization. This value is used to transform intersection distances from
+ * object space to world space.
  * \todo Maybe there's a space for a little performance improvement?
  */
-void ray_transform(const struct ray *r, const struct transform *t, struct ray *ret){
+float ray_transform(const struct ray *r, const struct transform *t, struct ray *ret){
 	vector_transform(&(r->origin), t, &(ret->origin));
-	vector_transform(&(r->direction), t, &(ret->direction));
-	ray_prepare(ret);
+	vector_transform_direction(&(r->direction), t, &(ret->direction));
+	return ray_prepare(ret);
 }

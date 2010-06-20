@@ -4,6 +4,15 @@
 #include "color.h"
 #include "scene.h"
 
-void renderer_render(struct scene *s, unsigned y0, unsigned y1, struct color *pixmap);
+/**
+ * Group of rows to render.
+ */
+struct renderer_chunk{
+	unsigned top;
+	unsigned height;
+};
+
+void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
+	struct color *pixmap);
 
 #endif

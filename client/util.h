@@ -26,7 +26,8 @@ void debug(const char *fmt, ...);
 		
 
 void error_internal(int e, const char *file, int line,
-	const char *func, const char *fmt, ...);
+	const char *func, const char *fmt, ...)
+	__attribute__ ((noreturn));
 void warning_internal(int e, const char *file, int line,
 	const char *func, const char *fmt, ...);
 

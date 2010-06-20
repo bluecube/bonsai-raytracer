@@ -30,32 +30,28 @@ static void get_bounding_box(const struct transform *t, struct bounding_box *b){
 }
 
 /**
- * Find out if a ray is intersecting the sphere and return the first positive
- * intersection distance or a negative number.
+ * Get the first intersection point of the sphere that is in the interval
+ * \f$ <lowerBound, upperBound> \f$.
+ * \return Distance to the intersection (in object coordinates),
+ * or NAN if there is no intersection in the interval.
  * \todo Check if using the bounding box first wouldn't help.
  */
-static float get_intersection(struct object *sphere, const struct ray *r){
+float get_intersection(struct object *o, const struct ray *r,
+	float lowerBound, float upperBound){
+
 	float coefs[3];
 
 	coefs[0] = vector_length_squared(&(r->origin));
 	coefs[1] = vector_dot(&(r->origin), &(r->direction));
 	coefs[2] = 1;
 
-	float results[2];
-
-	unsigned nroots = quadratic_solve(coefs, results);
-
-	if(nroots == 0){
-		return -1;
-	}else if(nroots == 1){
-		return results[0];
-	}else if(results[0] > 0){
-		return results[0];
-	}else{
-		return results[1];
-	}
+	return quadratic_first_root_in_interval(coefs, lowerBound, upperBound);
 }
 
+/**
+ * Get the normal vector of the object in a point #v.
+ * \pre #v is close to the surface of the object.
+ */
 static void get_normal(struct object *sphere, const struct vector *v, struct vector *normal){
 	*normal = *v;
 }

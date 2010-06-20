@@ -1,7 +1,7 @@
 #ifndef BONSAI_CLIENT_SCENE_H
 #define BONSAI_CLIENT_SCENE_H
 
-#include "kd-tree.h"
+#include "kd_tree.h"
 #include "object.h"
 
 /**
@@ -20,7 +20,8 @@ struct scene{
 	struct kd_tree root;
 };
 
-void scene_destroy(struct scene *s);
+void scene_init(struct scene *s);
+void scene_empty(struct scene *s);
 
 float scene_ray_intersection(const struct scene *s, const struct ray *r,
 	struct object **found);

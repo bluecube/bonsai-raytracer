@@ -5,48 +5,23 @@
 #include "measurements.h"
 
 /**
- * Free all memory allocated by a scene,
- * including all objects.
+ * Initialize an empty scene, with all fields zero, doesn't deallocate any memory.
  */
-void scene_destroy(struct scene *s){
-	while(s->objs){
-		struct object *tmp = s->objs->next;
+void scene_init(struct scene *s){
+	s->raysPerPx = 0;
 
-		s->objs->destroy(s->objs);
+	s->focalLength = 0;
+	s->apertureDiameter = 0;
 
-		s->objs = tmp;
-	}
+	s->width = s->height = 0;
 
-	free(s);
+	kd_tree_init(&(s->root));
 }
 
 /**
- * Compute a first nonnegative intersection of a scene and a ray.
- * \return Distance to the intersection (in object coordinates),
- * or a negative number if there is no intersection or all intersections
- * are negative.
- * \param s Scene.
- * \param r Ray.
- * \param[out] found Pointer to pointer to the found object.
- * If return value is negative, then this value is NULL.
+ * Free all the memory used by the scene except the top level structure.
  */
-float scene_ray_intersection(const struct scene *s, const struct ray *r,
-	struct object **found){
-
-	// count the intersection
-	MEASUREMENTS_RAY_SCENE_INTERSECTION();
-
-	float bestDistance = -1;
-	*found = NULL;
-
-	for(struct object *obj = s->objs; obj != NULL; obj = obj->next){
-		float distance = obj->get_intersection(obj, r);
-		if(distance > 0 && (bestDistance < 0 || distance < bestDistance)){
-			bestDistance = distance;
-			*found = obj;
-
-		}
-	}
-
-	return bestDistance;
+void scene_empty(struct scene *s){
+	kd_tree_empty(&(s->root));
 }
+

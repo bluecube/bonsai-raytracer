@@ -2,6 +2,7 @@
  * \file
  * Client entry point and vase of the network protocol.
  */
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -10,10 +11,12 @@
 
 #include <unistd.h>
 
+#include "color.h"
 #include "net_json.h"
 #include "object.h"
+#include "protocol.h"
+#include "renderer.h"
 #include "scene.h"
-#include "scene_building.h"
 #include "shared_defs.h"
 #include "util.h"
 
@@ -29,56 +32,46 @@ void usage(const char *argv0){
 }
 
 /**
- * Send the hello message imediately after connecting.
- */
-void send_hello(struct net_json *connection, const char *hostname){
-	json_object *message = json_object_new_array();
-	json_object_array_add(message, json_object_new_string("Hello"));
-	json_object_array_add(message, json_object_new_string(hostname));
-	
-	json_object *version = json_object_new_array();
-	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_MAJOR));
-	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_MINOR));
-	json_object_array_add(version, json_object_new_int(CLIENT_VERSION_REV));
-
-	json_object_array_add(message, version);
-	
-	net_json_write(connection, message);
-}
-
-/**
- * Read commands from input and decide what to do with them.
+ * The actual work loop and the part of a protocol that contains the actions.
  */
 void work(struct net_json *connection){
 	bool keepRunning = true;
 
-	struct scene *s = NULL;
+	struct scene s;
+	scene_init(&s);
 
 	while(keepRunning){
-		json_object *obj = net_json_read(connection);
+		json_object *json = net_json_read(connection);
+		enum protocol_msg_types type;
 
-		json_object *typeObj = json_object_object_get(obj, "type");
-		if(typeObj == NULL){
-			protocol_error("Message type not specified.");
-		}
+		type = protocol_load_msg_type(json);
 
-		const char *type = json_object_get_string(typeObj);
+		switch(type){
+		case MSG_TYPE_SCENE:
+			scene_empty(&s);
+			protocol_load_scene(json, &s);
+			break;
+		case MSG_TYPE_CHUNK:
+			(void)0; // declaration cannot have a label, but (void)0 can
+			struct renderer_chunk chunk;
+			protocol_load_chunk(json, &chunk);
 
-		if(!strcmp(type, "scene")){
-			if(s){
-				scene_destroy(s);
-			}
-			s = scene_build(obj);
-		}else if(!strcmp(type, "chunk")){
-			printf("Would process scene\n");
-		}else if(!strcmp(type, "finished")){
+			size_t size = chunk.height * s.width;
+			struct color *pixmap = checked_malloc(size * sizeof(struct color));
+
+			renderer_render(&s, &chunk, pixmap);
+
+			struct json_object *jsonPixmap = protocol_store_pixmap(pixmap, size);
+			free(pixmap);
+			net_json_write(connection, jsonPixmap);
+
+			break;
+		case MSG_TYPE_FINISHED:
 			keepRunning = false;
-			return;
-		}else{
-			protocol_error("Unknow message type \"%s\".", type);
+			break;
 		}
 
-		json_object_put(obj);
+		json_object_put(json);
 	}
 }
 
@@ -120,7 +113,7 @@ int main(int argc, char **argv){
 	if(gethostname(hostname, BUFFER_LEN)){
 		error(errno, NULL);
 	}
-	send_hello(connection, hostname);
+	net_json_write(connection, protocol_store_hello(hostname));
 
 	work(connection);
 

@@ -21,16 +21,20 @@ struct object{
 	 */
 	struct transform invTransform;
 	
+	/**
+	 * Pointer to the next object in the list of a kd-tree's node.
+	 */
 	struct object *next;
 
 	/**
-	 * Get the first positive intersection point of the object.
+	 * Get the first intersection point of the object that is in the interval
+	 * \f$ <lowerBound, upperBound> \f$.
 	 * \return Distance to the intersection (in object coordinates),
-	 * or a negative number if there is no intersection or all intersections
-	 * are negative.
+	 * or NAN if there is no intersection in the interval.
 	 * Bounding box is not checked before this method is called.
 	 */
-	float (*get_intersection)(struct object *o, const struct ray *r);
+	float (*get_intersection)(struct object *o, const struct ray *r,
+		float lowerBound, float upperBound);
 
 	/**
 	 * Get the normal vector of the object in a point #v.
@@ -40,12 +44,16 @@ struct object{
 	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
 
 	/**
-	 * Virtual destructor :-)
+	 * Virtual destructor :-).
+	 * Free all the memory used by the object.
 	 */
 	void (*destroy)(struct object *o);
 };
 
 struct object *object_new(const struct transform *t);
 void object_destroy(struct object *o);
+
+float object_ray_intersection(struct object *o, const struct ray *r,
+	float lowerBound, float upperBound);
 
 #endif

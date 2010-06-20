@@ -257,6 +257,7 @@ sub worker{
 
 		last;
 	}
+	print CLIENT encode_json({type => 'finished'}), "\n";
 
 	close CLIENT;
 
