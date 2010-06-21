@@ -93,7 +93,7 @@ sub failChunk{
 # update UI.
 sub finishChunk{
 	my $chunk = shift;
-	my $data = $chunk->{'data'};
+	my $data = shift;
 	my $scene = $chunk->{'scene'};
 
 	my $image = $scene->{'image'};
@@ -101,10 +101,11 @@ sub finishChunk{
 	my $offset = $chunk->{'top'} * $scene->{'width'};
 	my $length = $chunk->{'height'} * $scene->{'width'};
 
-	scalar(@$data) == $length or die;
+	((scalar @$data) == $length) or die "Wrong size of reply.";
 
-	@{$image}[$offset .. $length - 1] = @$data;
+	splice(@{$scene->{'image'}}, $offset, $length, @{$data});
 
+	$scene->{'finishedChunkCount'} ++;
 	$scene->{'finishedRows'} += $chunk->{'height'};
 	updateStatus($scene);
 }
@@ -181,6 +182,7 @@ sub loadScene(){
 		my $len = min($chunkRows, $height - $y);
 
 		push @{$scene->{'availableChunks'}}, {
+			'top' => $y,
 			'height' => $len,
 			'scene' => $scene,
 			'data' => encode_json({'top' => $y, 'height' => $len, 'type' => 'chunk'}),
@@ -189,7 +191,9 @@ sub loadScene(){
 		++$count;
 	}
 
-	#$scene->{'image'} = ([0, 0, 0]) x ($width * $height);
+	my @image = ([0, 0, 0]) x ($width * $height);
+	print(scalar(@image));
+	$scene->{'image'} = \@image;
 
 	$scene->{'width'} = $width;
 	$scene->{'height'} = $height;
@@ -207,7 +211,8 @@ sub loadScene(){
 	$data->{'type'} = 'scene';
 	$scene->{'data'} = encode_json($data);
 
-	shared_clone($scene);
+	$scene;
+	#shared_clone($scene);
 }
 
 sub check_hello{
@@ -225,6 +230,8 @@ sub worker{
 	my $scene = shift;
 	my $port = shift;
 	my $iaddr = shift;
+
+	binmode(CLIENT, ":unix");
 
 	statusPrint "Connection from ", inet_ntoa($iaddr), " at port $port";
 
@@ -248,15 +255,19 @@ sub worker{
 	
 	while(1){
 		my $chunk = nextChunk($scene);
-	
-		print CLIENT $scene->{'data'}, "\n";
-		print CLIENT $chunk->{'data'}, "\n";
-		sleep 2;
-	
-		failChunk($chunk);
 
-		last;
+		last unless $chunk;
+	
+		print CLIENT ($scene->{'data'} . "\n");
+		print CLIENT ($chunk->{'data'} ."\n");
+
+		my $reply = decode_json(<CLIENT>);
+
+		finishChunk($chunk, $reply);
+		
+		#failChunk($chunk);
 	}
+
 	print CLIENT encode_json({type => 'finished'}), "\n";
 
 	close CLIENT;
@@ -333,20 +344,20 @@ bind SERVER, sockaddr_in($port, INADDR_ANY) or die "bind: $!";
 listen SERVER, SOMAXCONN or die "listen: $!";
 statusPrint "Server started, listening on port $port.\n";
 
-while(1){
+#while(1){
 	my $paddr = accept(CLIENT, SERVER) || do {
 			# try again if accept() returned because a signal was received
 			next if $!{EINTR};
 			die "accept: $!";
 		};
 	my ($port, $iaddr) = sockaddr_in($paddr);
-	my $thr = threads->create('worker', *CLIENT, $scene, $port, $iaddr);
-	$thr->detach();
-}
 
-undefine $status;
+	worker(*CLIENT, $scene, $port, $iaddr);
+#	my $thr = threads->create('worker', *CLIENT, $scene, $port, $iaddr);
+#	$thr->detach();
+#}
 
-print "Writing to '$output'.\n";
+print "Writing to '", $scene->{'outputFile'} ,"'.\n";
 RadianceHDR::outputHDR(
 	$scene->{'outputFile'},
 	$scene->{'width'},
