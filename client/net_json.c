@@ -16,6 +16,8 @@
 
 #include <printbuf.h>
 
+#include <stdio.h>
+
 #include "util.h"
 
 struct net_json{
@@ -34,9 +36,14 @@ static void read_line(int fd, struct printbuf *buf){
 
 	char c;
 	do{
-		if(read(fd, &c, 1) == -1){
+		ssize_t status = read(fd, &c, 1);
+		
+		if(status == -1){
 			error(errno, NULL);
+		}else if(status < 1){
+			error(0, "Remote side closed the connection up.");
 		}
+
 		if(printbuf_memappend(buf, &c, 1) == -1){
 			error(errno, NULL);
 		}
@@ -172,12 +179,13 @@ json_object *net_json_read(struct net_json *connection){
 		connection->buf->buf, connection->buf->bpos);
 	
 	if(obj == NULL){
-		error(errno, NULL);
-	}
-
-	if(is_error(obj)){
-		error(0, "Error in JSON data (%s).",
-			json_tokener_errors[-(unsigned long)obj]);
+		if(connection->tok->err != json_tokener_success){
+			error(0, "Error in JSON data (%s at offset %d).\n",
+				json_tokener_errors[connection->tok->err],
+				connection->tok->char_offset);
+		}else{
+			error(errno, NULL);
+		}
 	}
 
 	return obj;
