@@ -55,6 +55,10 @@ void kd_tree_empty(struct kd_tree *t){
 float kd_tree_ray_intersection(const struct kd_tree *t, const struct ray *r,
 	float lowerBound, float upperBound, struct object **result){
 
+	if(t == NULL){
+		return NAN;
+	}
+
 	assert(lowerBound <= upperBound);
 
 	float distance = NAN;
