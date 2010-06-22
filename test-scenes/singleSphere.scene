@@ -1,16 +1,12 @@
 {
 	"camera": {
-		"raysPerPx": 10
+		"raysPerPx": 1
 	},
 	"objects": [
 		{
 			"type": "sphere",
-			"transform": [
-				2, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 10, 1
-			]
+			"r": 2,
+			"center": [1, 0, 10]
 		}
 	]
 }

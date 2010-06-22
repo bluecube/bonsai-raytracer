@@ -36,6 +36,23 @@ my %objectTypes = (
 		$_->{'polygons'} = $ret->{'polygons'};
 	},
 
+	sphere => sub{
+		my $r = 1;
+		$r = $_->{'r'} if defined($_->{'r'});
+
+		my $center = [0, 0, 0];
+		$center = $_->{'center'} if defined($_->{'center'});
+
+		push @$center, 0;
+
+		Math::MatrixReal->new_from_rows( [
+				[$r, 0, 0, 0],
+				[0, $r, 0, 0],
+				[0, 0, $r, 0],
+				$center
+			]);
+	},
+
 	CSG => sub{
 		die "Operation must be specified" unless defined $_->{'operation'};
 		objects();
@@ -186,18 +203,21 @@ sub object{
 	
 	die("Object type must be specified") unless defined $type;
 	
+	my $transform;
 	if(defined($_->{'transform'})){
-		$_->{'transform'} = readMatrix($_->{'transform'});
+		$transform = readMatrix($_->{'transform'});
 	}else{
-		$_->{'transform'} = Math::MatrixReal->new_diag([1, 1, 1, 1]); 
+		$transform = Math::MatrixReal->new_diag([1, 1, 1, 1]); 
 	}
 	
-	
-	#&{$objectTypes{$type}}() if defined($objectTypes{$type});
+	my $newTransform = &{$objectTypes{$type}}() if defined($objectTypes{$type});
 	print "Object: $type\n";
 	
+	if($newTransform){
+		$transform = $newTransform * $transform;
+	}
 	
-	$_->{'transform'} = writeMatrix($_->{'transform'});
+	$_->{'transform'} = writeMatrix($transform);
 }
 
 
