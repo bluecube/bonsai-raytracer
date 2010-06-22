@@ -109,7 +109,7 @@ void vector_transform(const struct vector *v, const struct transform *t,
 	for(int i = 0; i < DIMENSIONS; ++i){
 		ret->p[i] = t->p[9 + i];
 		for(int j = 0; j < DIMENSIONS; ++j){
-			ret->p[i] = v->p[j] * t->p[3 * j + i];
+			ret->p[i] += v->p[j] * t->p[3 * j + i];
 		}
 	}
 }
@@ -124,7 +124,7 @@ void vector_transform_direction(const struct vector *v, const struct transform *
 	for(int i = 0; i < DIMENSIONS; ++i){
 		ret->p[i] = 0;
 		for(int j = 0; j < DIMENSIONS; ++j){
-			ret->p[i] = v->p[j] * t->p[3 * j + i];
+			ret->p[i] += v->p[j] * t->p[3 * j + i];
 		}
 	}
 }

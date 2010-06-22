@@ -37,7 +37,10 @@ sub float2rgbe{
 	my $max = List::Util::max(@rgb);
 
 	my ($x, $e) = POSIX::frexp($max);
-	$x /= $max / 256; # $x = 256 / 2^$e;
+
+	if($max != 0){
+		$x /= $max / 256; # $x = 256 / 2^$e;
+	}
 
 	pack'C4', ($rgb[0] * $x, $rgb[1] * $x, $rgb[2] * $x, $e + 128);
 

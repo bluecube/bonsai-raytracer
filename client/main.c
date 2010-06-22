@@ -50,6 +50,8 @@ void work(struct net_json *connection){
 		case MSG_TYPE_SCENE:
 			scene_empty(&s);
 			protocol_load_scene(json, &s);
+
+printf("Scene loaded.\n");
 			break;
 		case MSG_TYPE_CHUNK:
 			(void)0; // declaration cannot have a label, but (void)0 can
@@ -59,6 +61,7 @@ void work(struct net_json *connection){
 			size_t size = chunk.height * s.width;
 			struct color *pixmap = checked_malloc(size * sizeof(struct color));
 
+printf("Rendering chunk.\n");
 			renderer_render(&s, &chunk, pixmap);
 
 			struct json_object *jsonPixmap = protocol_store_pixmap(pixmap, size);
@@ -67,6 +70,7 @@ void work(struct net_json *connection){
 
 			break;
 		case MSG_TYPE_FINISHED:
+printf("Finishing\n");
 			keepRunning = false;
 			break;
 		}

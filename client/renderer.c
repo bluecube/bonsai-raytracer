@@ -23,12 +23,12 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
 	MEASUREMENTS_RAY_SCENE_INTERSECTION();
 	float distance = kd_tree_ray_intersection(&(s->root), r, 0, INFINITY, &obj);
 
-	if(distance < 0){
+	if(isnan(distance)){
 		// If the ray didn't hit anything, the ray stays black.
 		return;
 	}
 
-	p->energy = 0.5;
+	p->energy = 1;;
 }
 
 /**
@@ -44,9 +44,9 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	int ymax = chunk->top + chunk->height;
 
 	// How many meters per pixel.
-	float inc = 1 / (s->width - 1);
+	float inc = 1 / (float)(s->width - 1);
 
-	float yy = inc * (chunk->top - s->height / 2);
+	float yy = inc * (chunk->top - (float)(s->height) / 2);
 
 	struct vector filmPoint;
 	struct vector lensCenter;

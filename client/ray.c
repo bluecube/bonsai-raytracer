@@ -20,7 +20,7 @@ float ray_prepare(struct ray *r){
 	struct vector tmp;
 
 	float ret = vector_length(&r->direction);
-	vector_divide(&(r->direction), 1 / ret, &tmp);
+	vector_multiply(&(r->direction), 1 / ret, &tmp);
 
 	r->direction = tmp;
 

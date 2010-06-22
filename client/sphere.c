@@ -41,8 +41,8 @@ float get_intersection(struct object *o, const struct ray *r,
 
 	float coefs[3];
 
-	coefs[0] = vector_length_squared(&(r->origin));
-	coefs[1] = vector_dot(&(r->origin), &(r->direction));
+	coefs[0] = vector_length_squared(&(r->origin)) - 1;
+	coefs[1] = 2 * vector_dot(&(r->origin), &(r->direction));
 	coefs[2] = 1;
 
 	return quadratic_first_root_in_interval(coefs, lowerBound, upperBound);
