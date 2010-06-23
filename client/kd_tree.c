@@ -1,8 +1,91 @@
 #include "kd_tree.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "util.h"
+
+/**
+ * Cost of an intersection test.
+ * This should be an average case through all object types,
+ * weighted by the probability of using each type
+ * (super magic arbitrary constant).
+ * \todo Set some more realistic value.
+ */
+#define INTERSECTION_COST 5.0
+
+/**
+ * Cost of traversing a KD-tree node.
+ * Used for SAH when building a tree.
+ * \todo Set some more realistic value.
+ */
+#define TRAVERSAL_COST 1.0
+
+/**
+ * A list of objects with count, pointer to the 
+ * terminating NULL pointer and a bounding box.
+ * Helper data structure for tree build.
+ */
+struct object_list{
+	struct object *head;
+	struct object **end;
+	unsigned count;
+
+	struct bounding_box box;
+};
+
+/**
+ * Empty the object list.
+ */
+static void object_list_empty(struct object_list *l){
+	l->head = NULL;
+	l->end = &(l->head);
+	l->count = 0;
+
+	bounding_box_empty(&(l->box));
+}
+
+/**
+ * Append an object to a last position of an object list.
+ */
+static void object_list_append(struct object_list *l, struct object *o){
+	o->next = NULL;
+
+	*(l->end) = o;
+	l->end = &(o->next);
+
+	++(l->count);
+	bounding_box_expand_box(&(l->box), &(o->boundingBox));
+
+}
+
+/**
+ * Append items of #l2 to the back of #l1.
+ */
+static void object_list_append_list(struct object_list *l1, struct object_list *l2){
+	if(l2->count > 0){
+		*(l1->end) = l2->head;
+		l1->end = l2->end;
+		l1->count += l2->count;
+
+		bounding_box_expand_box(&(l1->box), &(l2->box));
+	}
+
+	object_list_empty(l2);
+}
+
+/**
+ * Build a object list from ordinary linked list of objects.
+ */
+static void object_list_build(struct object_list *l, struct object *o){
+	while(o != NULL){
+		struct object *tmp = o->next;
+		object_list_append(l, o);
+		o = tmp;
+	}
+}
 
 /**
  * Set all the items of a kd tree to zero or NULL.
@@ -118,4 +201,166 @@ float kd_tree_ray_intersection(const struct kd_tree *t, const struct ray *r,
 	}
 
 	return distance;
+}
+
+/**
+ * Calculate the SAH cost of a given split.
+ * \param wholeBox A box containing all of the objects.
+ * \param frontBox A box containing all objects that fall in front of the
+ * splitting plane.
+ * \param frontCount Number of objects in front of the plane.
+ * \param backBox A box containing all objects that fall behind the plane.
+ * \param backCount Number of objects behind the plane.
+ * \param intersectingCount Number of objects intersecting the splitting plane.
+ *
+ * \note Uses the INTERSECTION_COST and TRAVERSAL_COST constants.
+ *
+ * \todo Try giving 20% bonus for clipping away empty space?
+ */
+static float sah_split_cost(struct bounding_box *wholeBox,
+	struct bounding_box *frontBox,
+	unsigned frontCount,
+	struct bounding_box *backBox,
+	unsigned backCount,
+	unsigned intersectingCount){
+	
+	float wholeArea = bounding_box_area(wholeBox);
+
+	// probabilities of hitting 
+	float pFront = bounding_box_area(frontBox) / wholeArea;
+	float pBack = bounding_box_area(backBox) / wholeArea;
+
+	float cost = TRAVERSAL_COST +
+		(intersectingCount + pFront * frontCount + pBack * backCount) *
+		INTERSECTION_COST;
+
+	return cost;
+}
+
+/**
+ * Calculate the cost of not splitting the list of objects
+ * (keeping the current node as a leaf).
+ *
+ * \note Uses the INTERSECTION_COST constant.
+ */
+static float not_split_cost(unsigned count){
+	return count * INTERSECTION_COST;
+}
+
+/**
+ * Split the given list on a plane.
+ * Outputs three lists of objects that are in front of the plane,
+ * intersect it or are behind the plane.
+ */
+static void split_at(struct object_list *objs, int axis, float position,
+	struct object_list *front, struct object_list *back,
+	struct object_list *intersecting){
+
+	object_list_empty(front);
+	object_list_empty(back);
+	object_list_empty(intersecting);
+
+	struct object *o = objs->head;
+	while(o != NULL){
+		struct object *tmp = o->next;
+
+		if(o->boundingBox.p[0].p[axis] >= position){
+			object_list_append(front, o);
+		}else if(o->boundingBox.p[1].p[axis] <= position){
+			object_list_append(back, o);
+		}else{
+			object_list_append(intersecting, o);
+		}
+
+		o = tmp;
+	}
+
+	object_list_empty(objs);
+}
+
+/**
+ * Calculate the SAH cost of a split when only given the list of objects and
+ * then bounding box. Splits the list, calls sah_split_cost() and then merges
+ * the list back together (in different order).
+ */
+static float sah_split_cost_wrapped(struct object_list *objs, int axis, float position){
+
+	struct object_list front, back, intersecting;
+
+	split_at(objs, axis, position,
+		&front, &back, &intersecting);
+
+	float cost = sah_split_cost(&(objs->box),
+		&(front.box), front.count,
+		&(back.box), back.count,
+		intersecting.count);
+	
+	
+	object_list_append_list(&front, &intersecting);
+	object_list_append_list(&front, &back);
+
+	*objs = front;
+
+	return cost;
+}
+
+/**
+ * Recursively build a KD-tree in #t from objects in #objs using the surface
+ * area heuristic.
+ */
+static void kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
+
+	float bestCost = not_split_cost(objs->count);
+	bool bestIsNoSplit = true;
+	
+	kd_tree_empty(t);
+	
+	// For every object try using all six bounding box faces 
+	// as a kd-tree splitting planes.
+	for(struct object *o = objs->head; o != NULL; o = o->next){
+		for(int axis = 0; axis < DIMENSIONS; ++axis){
+			for(int i = 0; i < 2; ++i){
+				float position = o->boundingBox.p[i].p[axis];
+
+				float cost = sah_split_cost_wrapped(
+					objs, axis, position);
+
+				if(cost < bestCost){
+					bestCost = cost;
+					bestIsNoSplit = false;
+					t->axis = axis;
+					t->coord = position;
+				}
+			}
+		}
+	}
+
+	if(bestIsNoSplit){
+		t->objs = objs->head;
+	}else{
+		struct object_list front, back, intersecting;
+		
+		split_at(objs, t->axis, t->coord,
+			&front, &back, &intersecting);
+		
+		t->front = checked_malloc(sizeof(*(t->front)));
+		kd_tree_build_rec(t->front, &front);
+
+		t->back = checked_malloc(sizeof(*(t->back)));
+		kd_tree_build_rec(t->back, &back);
+
+		t->objs = intersecting.head;
+	}
+}
+
+/**
+ * Fill a KD-tree t from objects in linked list objs.
+ * This is not meant to be blazing fast.
+ * Assumes that #t has no allocated memory.
+ */
+void kd_tree_build(struct kd_tree *t, struct object *objs){
+	struct object_list list;
+	object_list_build(&list, objs);
+
+	kd_tree_build_rec(t, &list);
 }
