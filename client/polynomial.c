@@ -30,7 +30,7 @@ unsigned quadratic_solve(const float coefs[], float roots[]){
 		roots[0] = -b / (2 * a);
 		return 1;
 	}else{
-		d = sqrt(d);
+		d = sqrtf(d);
 		roots[0] = (-b - d) / (2 * a);
 		roots[1] = (-b + d) / (2 * a);
 		return 2;
