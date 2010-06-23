@@ -30,8 +30,8 @@ float vector_length_squared(const struct vector *v);
 void vector_multiply(const struct vector *v1, float f, struct vector *ret);
 void vector_divide(const struct vector *v1, float f, struct vector *ret);
 void vector_normalize(const struct vector *v, struct vector *ret);
-void vector_set_normalized(float x, float y, float z, struct vector *ret);
-void vector_set(float x, float y, float z, struct vector *ret);
+void vector_set_normalized(struct vector *v, float x, float y, float z);
+void vector_set(struct vector *v, float x, float y, float z);
 void vector_transform(const struct vector *v,
 	const struct transform *t, struct vector *ret);
 void vector_transform_direction(const struct vector *v,

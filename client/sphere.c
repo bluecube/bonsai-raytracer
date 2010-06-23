@@ -16,11 +16,10 @@
 static void get_bounding_box(const struct transform *t, struct bounding_box *b){
 	for(int i = 0; i < 3; ++i){
 		struct vector tmp;
-		vector_set(
+		vector_set(&tmp,
 			t->p[0 + i],
 			t->p[3 + i],
-			t->p[6 + i],
-			&tmp);
+			t->p[6 + i]);
 		float box_size = vector_length(&tmp);
 		b->p[0].p[i] = t->p[9 + i] + box_size;
 		b->p[1].p[i] = t->p[9 + i] - box_size;

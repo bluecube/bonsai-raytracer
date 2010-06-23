@@ -85,16 +85,16 @@ void vector_normalize(const struct vector *v, struct vector *ret){
 /**
  * Set the fields of a vector and normalize if.
  */
-void vector_set_normalized(float x, float y, float z, struct vector *ret){
+void vector_set_normalized(struct vector *ret, float x, float y, float z){
 	struct vector tmp;
-	vector_set(x, y, z, &tmp);
+	vector_set(&tmp, x, y, z);
 	vector_normalize(&tmp, ret);
 }
 
 /**
  * Set the fields of a vector.
  */
-void vector_set(float x, float y, float z, struct vector *ret){
+void vector_set(struct vector *ret, float x, float y, float z){
 	ret->p[X] = x;
 	ret->p[Y] = y;
 	ret->p[Z] = z;

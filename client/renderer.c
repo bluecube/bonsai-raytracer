@@ -51,7 +51,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	struct vector filmPoint;
 	struct vector lensCenter;
 
-	vector_set(0, 0, 0, &lensCenter);
+	vector_set(&lensCenter, 0, 0, 0);
 
 	MEASUREMENTS_WARMUP();
 	MEASUREMENTS_START();
@@ -63,11 +63,10 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 			for(unsigned i = 0; i < s->raysPerPx; ++i){
 				struct ray r;
 
-				vector_set(
+				vector_set(&filmPoint,
 					- (xx + random_number(0, inc)),
 					- (yy + random_number(0, inc)),
-					- s->focalLength,
-					&filmPoint);
+					- s->focalLength);
 
 				ray_from_points(&r, &filmPoint, &lensCenter);
 				
