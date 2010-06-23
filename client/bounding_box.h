@@ -12,19 +12,18 @@ struct bounding_box{
 	struct vector p[2];
 };
 
-void bounding_box_union(const struct bounding_box *b1,
-	const struct bounding_box *b2,
-	struct bounding_box *ret);
-void bounding_box_intersection(const struct bounding_box *b1,
-	const struct bounding_box *b2,
-	struct bounding_box *ret);
+void bounding_box_expand(struct bounding_box *b, const struct vector *pt);
+void bounding_box_expand_box(struct bounding_box *b1,
+	const struct bounding_box *b2);
+
 void bounding_box_transform(const struct bounding_box *b,
 	const struct transform *t,
 	struct bounding_box *ret);
 
+void bounding_box_empty(struct bounding_box *b);
+
 void bounding_box_fix_order(struct bounding_box *b);
 
-double bounding_box_area(const struct bounding_box *b);
-double bounding_box_volume(const struct bounding_box *b);
+float bounding_box_area(const struct bounding_box *b);
 
 #endif
