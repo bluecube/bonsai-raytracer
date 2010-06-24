@@ -2,12 +2,22 @@ CFILES = $(wildcard *.c)
 OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
 
-CFLAGS = -Wall -g -std=gnu99
+CFLAGS = -Wall -std=gnu99
 LDFLAGS = -Wall -lm
 PROG = bonsai-client
 
 LDFLAGS += $(shell pkg-config --libs json)
 CFLAGS += $(shell pkg-config --cflags json)
+
+# debug flag
+DEBUG=1
+ifneq ($(DEBUG),1)
+  $(info Compiling in optimized mode)
+  CFLAGS += -O3
+else
+  $(info Compiling in debug mode)
+  CFLAGS += -O0 -g
+endif
 
 all: $(PROG)
 
