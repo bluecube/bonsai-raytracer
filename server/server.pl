@@ -252,13 +252,16 @@ sub worker{
 		close CLIENT;
 		return;
 	}
-	
+	my $sceneSent = 0;
 	while(1){
 		my $chunk = nextChunk($scene);
 
 		last unless $chunk;
-	
-		print CLIENT ($scene->{'data'} . "\n");
+		
+		if(!$sceneSent){
+			$sceneSent = 1;
+			print CLIENT ($scene->{'data'} . "\n");
+		}
 		print CLIENT ($chunk->{'data'} ."\n");
 
 		my $reply = decode_json(<CLIENT>);
