@@ -58,6 +58,8 @@ float quadratic_first_root_in_interval(const float coefs[],
 	}else if(d == 0){
 		return inside_interval(-b / (2 * a), lowerBound, upperBound);
 	}else{
+		d = sqrtf(d);
+
 		float root = (-b - d) / (2 * a);
 		if(root >= lowerBound && root <= upperBound){
 			return root;
