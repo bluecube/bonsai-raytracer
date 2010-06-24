@@ -38,7 +38,6 @@ void object_destroy(struct object *o){
 float object_ray_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound){
 
-
 	struct ray transformed;
 	float ratio = ray_transform(r, &(o->invTransform), &transformed);
 
@@ -46,6 +45,4 @@ float object_ray_intersection(struct object *o, const struct ray *r,
 	upperBound /= ratio;
 
 	return (o->get_intersection(o, &transformed, lowerBound, upperBound)) * ratio;
-
-	
 }
