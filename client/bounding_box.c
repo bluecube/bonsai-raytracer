@@ -2,21 +2,13 @@
 
 #include <math.h>
 
-static inline float min(float a, float b){
-	return a < b ? a : b;
-}
-
-static inline float max(float a, float b){
-	return a > b ? a : b;
-}
-
 /**
  * Expand the bounding box to contain a point.
  */
 void bounding_box_expand(struct bounding_box *b, const struct vector *pt){
 	for(int i = 0; i < DIMENSIONS; ++i){
-		b->p[0].p[i] = min(b->p[0].p[i], pt->p[i]);
-		b->p[1].p[i] = max(b->p[1].p[i], pt->p[i]);
+		b->p[0].p[i] = fminf(b->p[0].p[i], pt->p[i]);
+		b->p[1].p[i] = fmaxf(b->p[1].p[i], pt->p[i]);
 	}
 }
 
@@ -28,8 +20,8 @@ void bounding_box_expand_box(struct bounding_box *b1,
 	const struct bounding_box *b2){
 	
 	for(int i = 0; i < DIMENSIONS; ++i){
-		b1->p[0].p[i] = min(b1->p[0].p[i], b2->p[0].p[i]);
-		b1->p[1].p[i] = max(b1->p[1].p[i], b2->p[1].p[i]);
+		b1->p[0].p[i] = fminf(b1->p[0].p[i], b2->p[0].p[i]);
+		b1->p[1].p[i] = fmaxf(b1->p[1].p[i], b2->p[1].p[i]);
 	}
 }
 
@@ -45,8 +37,8 @@ void bounding_box_intersection(const struct bounding_box *b1,
 	struct bounding_box *ret){
 
 	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[0].p[i] = max(b1->p[0].p[i], b2->p[0].p[i]);
-		ret->p[1].p[i] = min(b1->p[1].p[i], b2->p[1].p[i]);
+		ret->p[0].p[i] = fmaxf(b1->p[0].p[i], b2->p[0].p[i]);
+		ret->p[1].p[i] = fminf(b1->p[1].p[i], b2->p[1].p[i]);
 	}
 }
 
