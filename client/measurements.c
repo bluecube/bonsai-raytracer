@@ -7,10 +7,16 @@
 
 #include "measurements.h"
 
+#include <stdint.h>
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define WARMUP_COUNT 10000
+
+/**
+ * Number of microseconds since some time in the past (the epoch?)
+ */
+typedef int_fast64_t timestamp_t;
 
 /**
  * Number of times the ray-scene intersection has been
@@ -21,27 +27,36 @@ unsigned measurementsIntersectionCounter;
 /**
  * Time of the last init.
  */
-static time_t measurementsStartTime;
+static timestamp_t measurementsStartTime;
+
+/**
+ * Return the current time.
+ */
+static timestamp_t get_timer(){
+        struct timeval t;
+        gettimeofday(&t, NULL);
+        return 1000000 * t.tv_sec + t.tv_usec;
+}
 
 /**
  * Reset the counters and remember the start time.
  */
 void measurements_start(){
 	measurementsIntersectionCounter = 0;
-	measurementsStartTime = time(NULL);
+	measurementsStartTime = get_timer();
 }
 
 /**
  * Print the measured data.
  */
 void measurements_print(){
-	time_t endTime = time(NULL);
+	timestamp_t endTime = get_timer();
 
-	double timeTaken = difftime(endTime, measurementsStartTime);
+	double timeTaken = (endTime - measurementsStartTime) / 1000000.0;
 	
-	printf("time taken: %.1f seconds\n", timeTaken);
+	printf("time taken: %.3f seconds\n", timeTaken);
 	printf("ray-scene intersections: %i\n", measurementsIntersectionCounter);
-	printf("rate: %.3f intersections per second\n",
+	printf("rate: %.5f intersections per second\n",
 		measurementsIntersectionCounter / timeTaken);
 }
 
