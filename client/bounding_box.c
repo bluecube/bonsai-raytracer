@@ -89,13 +89,16 @@ void bounding_box_fix_order(struct bounding_box *b){
 
 /**
  * Calculate the surface area of a bounding box.
- * The area may be negative if the box has incorrectly (?)
- * ordered vertices.
+ * If the box has negative length of a side, the area is 0.
  */
 float bounding_box_area(const struct bounding_box *b){
 	float x = b->p[1].p[X] - b->p[0].p[X];
 	float y = b->p[1].p[Y] - b->p[0].p[Y];
 	float z = b->p[1].p[Z] - b->p[0].p[Z];
+
+	if(x < 0 || y < 0 || z < 0){
+		return 0;
+	}
 
 	return 2 * ((x * y) + (y * z) + (x * z));
 }
