@@ -2,26 +2,19 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include "util.h"
 
 /**
- * Cost of an intersection test.
- * This should be an average case through all object types,
- * weighted by the probability of using each type
- * (super magic arbitrary constant).
- * \todo Set some more realistic value.
- */
-#define INTERSECTION_COST 5.0
-
-/**
- * Cost of traversing a KD-tree node.
+ * Cost of traversing a KD-tree node relative to a mean cost of
+ * intersecting an object (super magical constant).
  * Used for SAH when building a tree.
- * \todo Set some more realistic value.
+ * \todo Use some value based on measurements rather than this wild guess.
  */
-#define TRAVERSAL_COST 1.0
+#define TRAVERSAL_COST 0.5
 
 /**
  * A list of objects with count, pointer to the 
@@ -80,6 +73,7 @@ static void object_list_append_list(struct object_list *l1, struct object_list *
  * Build a object list from ordinary linked list of objects.
  */
 static void object_list_build(struct object_list *l, struct object *o){
+	object_list_empty(l);
 	while(o != NULL){
 		struct object *tmp = o->next;
 		object_list_append(l, o);
@@ -213,7 +207,7 @@ float kd_tree_ray_intersection(const struct kd_tree *t, const struct ray *r,
  * \param backCount Number of objects behind the plane.
  * \param intersectingCount Number of objects intersecting the splitting plane.
  *
- * \note Uses the INTERSECTION_COST and TRAVERSAL_COST constants.
+ * \note Uses the TRAVERSAL_COST constant.
  *
  * \todo Try giving 20% bonus for clipping away empty space?
  */
@@ -231,8 +225,7 @@ static float sah_split_cost(struct bounding_box *wholeBox,
 	float pBack = bounding_box_area(backBox) / wholeArea;
 
 	float cost = TRAVERSAL_COST +
-		(intersectingCount + pFront * frontCount + pBack * backCount) *
-		INTERSECTION_COST;
+		intersectingCount + pFront * frontCount + pBack * backCount;
 
 	return cost;
 }
@@ -240,11 +233,10 @@ static float sah_split_cost(struct bounding_box *wholeBox,
 /**
  * Calculate the cost of not splitting the list of objects
  * (keeping the current node as a leaf).
- *
- * \note Uses the INTERSECTION_COST constant.
+ * Since the intersection cost is 1, this function becomes a little too ... simple.
  */
-static float not_split_cost(unsigned count){
-	return count * INTERSECTION_COST;
+static inline float not_split_cost(unsigned count){
+	return count;
 }
 
 /**
@@ -287,14 +279,15 @@ static float sah_split_cost_wrapped(struct object_list *objs, int axis, float po
 
 	struct object_list front, back, intersecting;
 
+	struct bounding_box objsBoxCopy = objs->box;
+
 	split_at(objs, axis, position,
 		&front, &back, &intersecting);
 
-	float cost = sah_split_cost(&(objs->box),
+	float cost = sah_split_cost(&objsBoxCopy,
 		&(front.box), front.count,
 		&(back.box), back.count,
 		intersecting.count);
-	
 	
 	object_list_append_list(&front, &intersecting);
 	object_list_append_list(&front, &back);
@@ -307,13 +300,14 @@ static float sah_split_cost_wrapped(struct object_list *objs, int axis, float po
 /**
  * Recursively build a KD-tree in #t from objects in #objs using the surface
  * area heuristic.
+ * \return Depth of the tree constructed.
  */
-static void kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
+static unsigned kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
 
 	float bestCost = not_split_cost(objs->count);
 	bool bestIsNoSplit = true;
 	
-	kd_tree_empty(t);
+	kd_tree_init(t);
 	
 	// For every object try using all six bounding box faces 
 	// as a kd-tree splitting planes.
@@ -337,6 +331,8 @@ static void kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
 
 	if(bestIsNoSplit){
 		t->objs = objs->head;
+
+		return 1;
 	}else{
 		struct object_list front, back, intersecting;
 		
@@ -344,12 +340,18 @@ static void kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
 			&front, &back, &intersecting);
 		
 		t->front = checked_malloc(sizeof(*(t->front)));
-		kd_tree_build_rec(t->front, &front);
+		unsigned depthFront = kd_tree_build_rec(t->front, &front);
 
 		t->back = checked_malloc(sizeof(*(t->back)));
-		kd_tree_build_rec(t->back, &back);
+		unsigned depthBack = kd_tree_build_rec(t->back, &back);
 
 		t->objs = intersecting.head;
+
+		if(depthFront > depthBack){
+			return 1 + depthFront;
+		}else{
+			return 1 + depthBack;
+		}
 	}
 }
 
@@ -359,8 +361,12 @@ static void kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
  * Assumes that #t has no allocated memory.
  */
 void kd_tree_build(struct kd_tree *t, struct object *objs){
+	printf("Building the KD-tree...\n");
+
 	struct object_list list;
 	object_list_build(&list, objs);
 
-	kd_tree_build_rec(t, &list);
+	unsigned depth = kd_tree_build_rec(t, &list);
+
+	printf("Finished. Tree height is %u.\n", depth);
 }
