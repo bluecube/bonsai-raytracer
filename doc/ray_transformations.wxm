@@ -1,0 +1,90 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 0.8.2 ] */
+
+/* [wxMaxima: title   start ]
+Ray transformations
+   [wxMaxima: title   end   ] */
+
+/* [wxMaxima: comment start ]
+Converting between intersection distances in world coordinates and object coordinates.
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: hide output   ] */
+/* [wxMaxima: input   start ] */
+invTransform: matrix(
+ [t0,t1,t2,0], 
+ [t3,t4,t5,0], 
+ [t6,t7,t8,0], 
+ [t9,t10,t11,1]
+);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+origin: matrix([o0, o1, o2, 1]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+direction: matrix([d0, d1, d2, 0]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+ray_w: origin + t_w * direction;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: hide output   ] */
+/* [wxMaxima: input   start ] */
+len(x) := sqrt(x[1][1]^2 + x[1][2]^2 + x[1][3]^2);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: hide output   ] */
+/* [wxMaxima: input   start ] */
+normalize(x) := matrix([x[1][1]/len(x), x[1][2]/len(x), x[1][3]/len(x), x[1][4]]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: hide output   ] */
+/* [wxMaxima: input   start ] */
+ray_o: origin . invTransform + t_o * normalize(direction . invTransform);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+pt_w: matrix([x0, x1, x2, 1]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+pt_o: pt_w . invTransform;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+eq_x0: pt_w[1][1] = ray_w[1][1];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+eq_x1: pt_w[1][2] = ray_w[1][2];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+eq_x2: pt_w[1][3] = ray_w[1][3];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+pt_o: pt_o, eq_x0, eq_x1, eq_x2;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+transformed_len_eq: len(direction . invTransform) = ratio;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+solve(pt_o[1][1] = ray_o[1][1], t_w), transformed_len_eq;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+solve(pt_o[1][2] = ray_o[1][2], t_w), transformed_len_eq;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+solve(pt_o[1][3] = ray_o[1][3], t_w), transformed_len_eq;
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$

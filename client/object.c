@@ -41,8 +41,8 @@ float object_ray_intersection(struct object *o, const struct ray *r,
 	struct ray transformed;
 	float ratio = ray_transform(r, &(o->invTransform), &transformed);
 
-	lowerBound /= ratio;
-	upperBound /= ratio;
+	lowerBound *= ratio;
+	upperBound *= ratio;
 
-	return (o->get_intersection(o, &transformed, lowerBound, upperBound)) * ratio;
+	return (o->get_intersection(o, &transformed, lowerBound, upperBound)) / ratio;
 }
