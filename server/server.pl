@@ -18,7 +18,7 @@ use SharedDefs;
 
 use constant ID_STRING => "Bonsai raytracer server v0.1";
 
-use constant DEFAULT_CHUNKSIZE => 8000;
+use constant DEFAULT_CHUNKSIZE => 100000;
 use constant DEFAULT_CHUNKTIMEOUT => 60 * 20;
 use constant DEFAULT_RESOLUTION => 800;
 use constant DEFAULT_EXTENSION => '.hdr';
@@ -175,9 +175,11 @@ sub loadScene(){
 	$width = int($width);
 	$height = int($height);
 
+	my $raysPerPx = $data->{'camera'}->{'raysPerPx'};
+
 	my $count = 0;
 
-	my $chunkRows = max(1, int($chunkSize / $width));
+	my $chunkRows = max(1, int($chunkSize / ($raysPerPx * $width)));
 	for(my $y = 0; $y < $height; $y += $chunkRows){
 		my $len = min($chunkRows, $height - $y);
 
@@ -192,7 +194,6 @@ sub loadScene(){
 	}
 
 	my @image = ([0, 0, 0]) x ($width * $height);
-	print(scalar(@image));
 	$scene->{'image'} = \@image;
 
 	$scene->{'width'} = $width;
@@ -204,7 +205,7 @@ sub loadScene(){
 	$scene->{'finishedRows'} = 0;
 
 	print "Output resolution: $width x $height; $count chunks, ",
-		"$chunkRows rows/chunk ( = ", $width * $chunkRows, " px/chunk).\n";
+		"$chunkRows rows/chunk ( = ", $width * $chunkRows * $raysPerPx, " primary rays/chunk).\n";
 	
 	$data->{'width'} = $width + 0;
 	$data->{'height'} = $height + 0;
@@ -293,8 +294,8 @@ Usage:
 OPTIONS:
 	--chunksize=NUMBER
 		Granularity of the rendering.
-		Roughly how many pixels will there be in one chunk.
-		Default value is $chunkSize px.
+		Roughly how many primary rays will be traced in one chunk.
+		Default value is $chunkSize rays.
 	--help
 		This help.
 	--output=FILE

@@ -129,8 +129,10 @@ sub cameraSettings{
 
 	if(!defined($_->{'raysPerPx'})){
 		$_->{'raysPerPx'} = DEFAULT_RAYS_PER_PX;
+	}elsif($_->{'raysPerPx'} <= 0){
+		$_->{'raysPerPx'} = 1;
 	}else{
-		$_->{'raysPerPx'} = $_->{'raysPerPx'} * 1;
+		$_->{'raysPerPx'} = $_->{'raysPerPx'} + 0;
 	}
 
 	# transformation matrix
