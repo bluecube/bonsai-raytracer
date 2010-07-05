@@ -84,7 +84,7 @@ void *checked_malloc(size_t size){
  */
 void *checked_realloc(void *ptr, size_t size){
 	void *p = realloc(ptr, size);
-	if(!p)
+	if(!p && size != 0)
 		error(errno, NULL);
 	return p;
 }

@@ -55,13 +55,16 @@ static void get_normal(struct object *sphere, const struct vector *v, struct vec
 	*normal = *v;
 }
 
-struct object *sphere_new(const struct transform *t){
-	struct object *o = object_new(t);
-	
+/**
+ * Initialize a sphere.
+ * Initializes the underlying object structure and calculates the transformed
+ * bounding box.
+ */
+void sphere_init(struct object *o, const struct transform *t){
+	object_init(o, t);
+
 	get_bounding_box(t, &(o->boundingBox));
 
 	o->get_intersection = get_intersection;
 	o->get_normal = get_normal;
-
-	return o;
 }

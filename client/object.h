@@ -5,10 +5,10 @@
 #include "ray.h"
 #include "transform.h"
 
+#define OBJECT_CUSTOM_FLOAT_COUNT 4
+
 /**
- * Base of a object.
- * If this is used as a part of a more complicated object,
- * it has to be the first item of the structure.
+ * Geometric object with a surface.
  */
 struct object{
 	/**
@@ -17,15 +17,10 @@ struct object{
 	struct bounding_box boundingBox;
 
 	/**
-	 * Transformation from object coordinates to world coordinates.
+	 * Transformation from world coordinates to object coordinates.
 	 */
 	struct transform invTransform;
 	
-	/**
-	 * Pointer to the next object in the list of a kd-tree's node.
-	 */
-	struct object *next;
-
 	/**
 	 * Get the first intersection point of the object that is in the interval
 	 * \f$ <lowerBound, upperBound> \f$.
@@ -44,13 +39,23 @@ struct object{
 	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
 
 	/**
-	 * Virtual destructor :-).
-	 * Free all the memory used by the object.
+	 * Custom data depending on the object type.
 	 */
-	void (*destroy)(struct object *o);
+	float customFloats[OBJECT_CUSTOM_FLOAT_COUNT];
 };
 
-struct object *object_new(const struct transform *t);
+/**
+ * Structure used when building the tree.\
+ * Only a object with a pointer to the next one.
+ */
+struct wrapped_object{
+	struct object o;
+
+	struct wrapped_object *next;
+};
+
+
+void object_init(struct object *o, const struct transform *t);
 void object_destroy(struct object *o);
 
 float object_ray_intersection(struct object *o, const struct ray *r,

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "kd_tree.h"
+#include "object.h"
 #include "shared_defs.h"
 #include "transform.h"
 
@@ -110,42 +111,48 @@ static void load_transformation(struct json_object *obj, struct transform *t){
 }
 
 /**
- * Return a new object loaded from its JSON representation.
+ * Load an object from its JSON representation.
+ * \return true if the object was succesfuly loaded.
  */
-static struct object *load_object(struct json_object *obj){
+static void load_object(struct json_object *json, struct object *obj){
 	struct transform t;
 
-	load_transformation(j_o_o_g(obj, "transform"), &t);
+	load_transformation(j_o_o_g(json, "transform"), &t);
 
-	const char *type = load_string(j_o_o_g(obj, "type"));
+	const char *type = load_string(j_o_o_g(json, "type"));
 	
 	if(!strcmp(type, "sphere")){
-		return sphere_new(&t);
+		sphere_init(obj, &t);
 	}else{
 		warning(0, "Unknown object type \"%s\". Ignoring.", type);
-		return NULL;
 	}
 }
 
 /**
- * Load objects from a JSON array to a simple linked list.
+ * Load objects from a JSON array to an array.
+ * \param array Pointer to the array.
+ * It will be reallocated to hold all the objects.
  */
-static void load_objects(struct json_object *json, struct object **objects){
+static struct wrapped_object *load_objects(struct json_object *json){
 	if(json == NULL){
 		protocol_error("Missing description of objects.");
 	}
 
 	int count = json_object_array_length(json);
+
+	struct wrapped_object *ret = NULL;
 	
 	for(int i = 0; i < count; ++i){
-		struct object *obj =
-			load_object(json_object_array_get_idx(json, i));
-		if(obj == NULL){
-			continue;
-		}
-		obj->next = *objects;
-		*objects = obj;
+		struct wrapped_object *tmp =
+			checked_malloc(sizeof(struct wrapped_object));
+
+		load_object(json_object_array_get_idx(json, i), &(tmp->o));
+
+		tmp->next = ret;
+		ret = tmp;
 	}
+
+	return ret;
 }
 
 /**
@@ -172,7 +179,9 @@ void protocol_load_scene(struct json_object *json, struct scene *s){
 
 	load_camera(j_o_o_g(json, "camera"), s);
 
-	load_objects(j_o_o_g(json, "objects"), &(s->root.objs));
+	struct wrapped_object *objs = load_objects(j_o_o_g(json, "objects"));
+
+	scene_set_objects(s, objs);
 }
 
 /**

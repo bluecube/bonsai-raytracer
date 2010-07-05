@@ -1,0 +1,4 @@
+Pocty ray-scene pruseciku za sekundu
+
+Prvni implementace KD-stromu bez optimalizaci - 20k
+KD-strom s depth first layoutem a 8 byte na node - 215715.26234

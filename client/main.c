@@ -51,8 +51,6 @@ void work(struct net_json *connection){
 			scene_empty(&s);
 			protocol_load_scene(json, &s);
 
-			kd_tree_build(&(s.root), s.root.objs);
-
 printf("Scene loaded.\n");
 			break;
 		case MSG_TYPE_CHUNK:

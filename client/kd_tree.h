@@ -3,47 +3,68 @@
 
 #include "object.h"
 
+#include "stdint.h"
+
+/**
+ * KD-tree node.
+ * The tree is stored in the depth first layout.
+ * and the front links are ommited.
+ * Optimized to be as small as possible.
+ */
+struct kd_tree_node{
+	union{
+		struct{
+			_Bool leaf : 1;
+
+			/** 
+			 * If this flag is true, then the front subtree
+			 * was more probable (and now follows this node in the
+			 * nodes list), otherwise it was the back subtree.
+			 */
+			_Bool frontMoreProbable : 1;
+
+			/**
+			 * Index of the less probable child node.
+			 * The more probable child always immediately follows
+			 * the current node. 0 means that the subtree is missing.
+			 */
+			unsigned int lessProbableIndex : 28;
+
+			/** Axis of the split. */
+			unsigned int axis : 2;
+
+			/** Coordinate of the split */
+			float coord;
+		} __attribute__((packed));
+		struct{
+			/** Padding */
+			unsigned int x : 1;
+
+			/* Number of objects in the leaf. */
+			unsigned int count : 31;
+
+			/**
+			 * First object.
+			 * Index into the array of objects.
+			 */
+			uint32_t first;
+		} __attribute__((packed));
+	} __attribute__((packed));
+} __attribute__((packed));
+
 struct kd_tree{
-	/**
-	 * Index of the splitting axis
-	 * The splitting plane has equation \f$ \vec{X_{axis}} = coord \f$.
-	 */
-	int axis;
-	
-	/**
-	 * Coordinate of the splitting plane.
-	 * The splitting plane has equation \f$ \vec{X_{axis}} = coord \f$.
-	 */
-	float coord;
-	
-	/**
-	 * KD-tree with objects in front of the spliting plane.
-	 * For every point of every object in this tree
-	 * \f$ \vec{X_{axis}} \ge coord \f$ holds.
-	 */
-	struct kd_tree *front;
-	/**
-	 * KD-tree with objects in behind of the spliting plane.
-	 * For every point of every object in this tree
-	 * \f$ \vec{X_{axis}} \le coord \f$ holds.
-	 */
-	struct kd_tree *back;
-	
-	/**
-	 * Linked list of objects which arent placed in any of the subtrees.
-	 * This will be used for objects intersecting the splitting plane
-	 * and for objects not yet placed in the tree.
-	 */
-	struct object *objs;
+	struct kd_tree_node *nodes;
+	struct object *objects;
 };
 
-void kd_tree_init(struct kd_tree *t);
-void kd_tree_empty(struct kd_tree *t);
+void kd_tree_destroy(struct kd_tree *t);
 
-float kd_tree_ray_intersection(const struct kd_tree *t, const struct ray *r,
-	float lowerBound, float upperBound, struct object **result);
+float kd_tree_node_ray_intersection(const struct kd_tree_node *nodes, unsigned node,
+	struct object *objects,
+	const struct ray *r, float lowerBound, float upperBound,
+	struct object **result);
 
-void kd_tree_build(struct kd_tree *t, struct object *objs);
+void kd_tree_build(struct kd_tree *tree, struct wrapped_object *objs);
 
 
 #endif

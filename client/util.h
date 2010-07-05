@@ -35,4 +35,16 @@ void *checked_malloc(size_t size);
 void *checked_realloc(void *ptr, size_t size);
 char *checked_strdup(const char *s);
 
+/**
+ * Swap two values using a temporary variable.
+ * Both a and b must be lvalues, they are both evaluated multiple times.
+ * Doesn't work with variables named _tmp !
+ */
+#define SWAP(a, b) \
+	do{ \
+		typeof(a) _tmp = (a); \
+		(a) = (b); \
+		(b) = _tmp; \
+	}while(0)
+
 #endif

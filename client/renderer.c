@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include "kd_tree.h"
 #include "measurements.h"
 #include "object.h"
 #include "random.h"
@@ -21,14 +22,15 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
 	struct object *obj;
 
 	MEASUREMENTS_RAY_SCENE_INTERSECTION();
-	float distance = kd_tree_ray_intersection(&(s->root), r, 0, INFINITY, &obj);
+	float distance = kd_tree_node_ray_intersection(s->tree.nodes, 0,
+		s->tree.objects, r, 0, INFINITY, &obj);
 
 	if(isnan(distance)){
 		// If the ray didn't hit anything, the ray stays black.
 		return;
 	}
 
-	p->energy = 1;;
+	p->energy = 1;
 }
 
 /**

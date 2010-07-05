@@ -18,7 +18,7 @@ use SharedDefs;
 
 use constant ID_STRING => "Bonsai raytracer server v0.1";
 
-use constant DEFAULT_CHUNKSIZE => 100000;
+use constant DEFAULT_CHUNKSIZE => 500000;
 use constant DEFAULT_CHUNKTIMEOUT => 60 * 20;
 use constant DEFAULT_RESOLUTION => 800;
 use constant DEFAULT_EXTENSION => '.hdr';

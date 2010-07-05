@@ -17,13 +17,26 @@
 #define TRAVERSAL_COST 0.5
 
 /**
+ * Maximal depth of the KD-tree.
+ */
+#define MAX_TREE_DEPTH 64
+
+/**
+ * State of the KD-tree building.
+ */
+struct kd_tree_build_state{
+	unsigned nextNodeId;
+	unsigned nextObjectId;
+};
+
+/**
  * A list of objects with count, pointer to the 
  * terminating NULL pointer and a bounding box.
  * Helper data structure for tree build.
  */
 struct object_list{
-	struct object *head;
-	struct object **end;
+	struct wrapped_object *head;
+	struct wrapped_object **end;
 	unsigned count;
 
 	struct bounding_box box;
@@ -43,75 +56,38 @@ static void object_list_empty(struct object_list *l){
 /**
  * Append an object to a last position of an object list.
  */
-static void object_list_append(struct object_list *l, struct object *o){
+static void object_list_append(struct object_list *l, struct wrapped_object *o){
 	o->next = NULL;
 
 	*(l->end) = o;
 	l->end = &(o->next);
 
 	++(l->count);
-	bounding_box_expand_box(&(l->box), &(o->boundingBox));
-
 }
 
 /**
- * Append items of #l2 to the back of #l1.
+ * Build a object list from an array of objects.
  */
-static void object_list_append_list(struct object_list *l1, struct object_list *l2){
-	if(l2->count > 0){
-		*(l1->end) = l2->head;
-		l1->end = l2->end;
-		l1->count += l2->count;
+static void object_list_build(struct object_list *l, struct wrapped_object *objects){
 
-		bounding_box_expand_box(&(l1->box), &(l2->box));
-	}
-
-	object_list_empty(l2);
-}
-
-/**
- * Build a object list from ordinary linked list of objects.
- */
-static void object_list_build(struct object_list *l, struct object *o){
 	object_list_empty(l);
+
+	struct wrapped_object *o = objects;
 	while(o != NULL){
-		struct object *tmp = o->next;
+		struct wrapped_object *tmp = o->next;
 		object_list_append(l, o);
+
+		bounding_box_expand_box(&(l->box), &(o->o.boundingBox));
 		o = tmp;
 	}
 }
 
 /**
- * Set all the items of a kd tree to zero or NULL.
- * Doesn't deallocate anything.
+ * Free all memory used by the nodes of a KD-tree.
  */
-void kd_tree_init(struct kd_tree *t){
-	t->axis = 0;
-	t->coord = 0;
-	t->front = t->back = NULL;
-	t->objs = NULL;
-}
-
-/**
- * Free all memory used by the kd tree (nodes and objects),
- * except the memory used by *t.
- */
-void kd_tree_empty(struct kd_tree *t){
-	if(t->front){
-		kd_tree_empty(t->front);
-		free(t->front);
-	}
-	if(t->back){
-		kd_tree_empty(t->back);
-		free(t->back);
-	}
-
-	while(t->objs){
-		struct object *tmp = t->objs;
-		t->objs = t->objs->next;
-
-		tmp->destroy(tmp);
-	}
+void kd_tree_destroy(struct kd_tree *tree){
+	free(tree->nodes);
+	free(tree->objects);
 }
 
 /**
@@ -121,7 +97,7 @@ void kd_tree_empty(struct kd_tree *t){
  * \return Distance to the intersection (in world coordinates),
  * This value is aways inside the closed interval \f$ <lowerBound, upperBound> \f$, 
  * or NAN if there was no intersection found.
- * \param t KD-tree node in which to look for intersections.
+ * \param nodes Array of KD-tree nodes.
  * \param r Ray.
  * \param lowerBound Lower bound of the intersection distance.
  * \param upperBound Upper bound of the intersection distance.
@@ -129,105 +105,78 @@ void kd_tree_empty(struct kd_tree *t){
  * If no intersection was found, then its value is left unchanged.
  * \pre lowerBound <= upperBound
  */
-float kd_tree_ray_intersection(const struct kd_tree *t, const struct ray *r,
-	float lowerBound, float upperBound, struct object **result){
-
-	if(t == NULL){
-		return NAN;
-	}
+float kd_tree_node_ray_intersection(const struct kd_tree_node *nodes, unsigned node,
+	struct object *objects,
+	const struct ray *r, float lowerBound, float upperBound,
+	struct object **result){
 
 	assert(lowerBound <= upperBound);
 
-	float distance = NAN;
+	if(nodes[node].leaf){
+		float distance = NAN;
 
-	// First try to find intersections of the unsorted objects
-	for(struct object *o = t->objs; o != NULL; o = o->next){
-		float tmp = object_ray_intersection(o, r, lowerBound, upperBound);
+		unsigned end = nodes[node].first + nodes[node].count;
+		for(unsigned i = nodes[node].first; i < end; ++i){
+			float tmp = object_ray_intersection(&(objects[i]), r, lowerBound, upperBound);
 
-		if(!isnan(tmp)){
-			distance = tmp;
-			*result = o;
-			upperBound = tmp;
+			if(!isnan(tmp)){
+				distance = tmp;
+				*result = &(objects[i]);
+				upperBound = tmp;
+			}
 		}
 
+		return distance;
 	}
-	
-	// Find out where the ray intersects the splitting plane
-	int axis = t->axis;
-	float splitDistance =
-		(t->coord - r->origin.p[axis]) * r->invDirection.p[axis];
 
-	struct kd_tree *first;
-	struct kd_tree *second;
-	if(r->direction.p[axis] > 0){
-		first = t->back;
-		second = t->front;
+	// Find out where the ray intersects the splitting plane
+	int axis = nodes[node].axis;
+	float splitDistance =
+		(nodes[node].coord - r->origin.p[axis]) * r->invDirection.p[axis];
+
+	// Calculating the order of traversal:
+	// Four possibilities:
+	// if ray direction > 0
+	//   if nodes[node].frontMoreProbable
+	//     first = back = nodes[node].lessProbableIndex
+	//     second = front = node + 1
+	//   else
+	//     first = back = node + 1
+	//     second = front = nodes[node].lessProbableIndex
+	// else
+	//   if nodes[node].frontMoreProbable
+	//     first = front = node + 1
+	//     second = back = nodes[node].lessProbableIndex
+	//   else
+	//     first = front = nodes[node].lessProbableIndex
+	//     second = back = node + 1
+	unsigned first;
+	unsigned second;
+	if((r->direction.p[axis] > 0) ^ (nodes[node].frontMoreProbable)){
+		first = node + 1;
+		second = nodes[node].lessProbableIndex;
 	}else{
-		first = t->front;
-		second = t->back;
+		first = nodes[node].lessProbableIndex;
+		second = node + 1;
 	}
 
 	if(upperBound <= splitDistance){
-		float tmp = kd_tree_ray_intersection(first, r, lowerBound,
-			upperBound, result);
-		if(!isnan(tmp)){
-			distance = tmp;
-		}
+		return kd_tree_node_ray_intersection(nodes, first, objects, r,
+			lowerBound, upperBound, result);
 	}else if(lowerBound >= splitDistance){
-		float tmp = kd_tree_ray_intersection(second, r, lowerBound,
-			upperBound, result);
-		if(!isnan(tmp)){
-			distance = tmp;
-		}
+		return kd_tree_node_ray_intersection(nodes, second, objects, r,
+			lowerBound, upperBound, result);
 	}else{
 		float tmp;
-		tmp = kd_tree_ray_intersection(first, r, lowerBound,
-			splitDistance, result);
+		tmp = kd_tree_node_ray_intersection(nodes, first, objects, r,
+			lowerBound, splitDistance, result);
 		if(!isnan(tmp)){
-			distance = tmp;
+			return tmp;
 		}else{
-			tmp = kd_tree_ray_intersection(second, r, splitDistance,
-				upperBound, result);
-			if(!isnan(tmp)){
-				distance = tmp;
-			}
+			return kd_tree_node_ray_intersection(nodes, second, objects, r,
+				splitDistance, upperBound, result);
 		}
 	}
-
-	return distance;
-}
-
-/**
- * Calculate the SAH cost of a given split.
- * \param wholeBox A box containing all of the objects.
- * \param frontBox A box containing all objects that fall in front of the
- * splitting plane.
- * \param frontCount Number of objects in front of the plane.
- * \param backBox A box containing all objects that fall behind the plane.
- * \param backCount Number of objects behind the plane.
- * \param intersectingCount Number of objects intersecting the splitting plane.
- *
- * \note Uses the TRAVERSAL_COST constant.
- *
- * \todo Try giving 20% bonus for clipping away empty space?
- */
-static float sah_split_cost(struct bounding_box *wholeBox,
-	struct bounding_box *frontBox,
-	unsigned frontCount,
-	struct bounding_box *backBox,
-	unsigned backCount,
-	unsigned intersectingCount){
-	
-	float wholeArea = bounding_box_area(wholeBox);
-
-	// probabilities of hitting 
-	float pFront = bounding_box_area(frontBox) / wholeArea;
-	float pBack = bounding_box_area(backBox) / wholeArea;
-
-	float cost = TRAVERSAL_COST +
-		intersectingCount + pFront * frontCount + pBack * backCount;
-
-	return cost;
 }
 
 /**
@@ -241,27 +190,36 @@ static inline float not_split_cost(unsigned count){
 
 /**
  * Split the given list on a plane.
- * Outputs three lists of objects that are in front of the plane,
- * intersect it or are behind the plane.
+ * Outputs two lists of objects that are in front of the plane,
+ * and behind the plane. Objects that have a nonempty intersection with
+ * the splitting plane are copied and placed into both lists.
  */
 static void split_at(struct object_list *objs, int axis, float position,
-	struct object_list *front, struct object_list *back,
-	struct object_list *intersecting){
+	struct object_list *front, struct object_list *back){
 
 	object_list_empty(front);
 	object_list_empty(back);
-	object_list_empty(intersecting);
 
-	struct object *o = objs->head;
+	front->box = objs->box;
+	back->box = objs->box;
+
+	front->box.p[0].p[axis] = position;
+	back->box.p[1].p[axis] = position;
+
+	struct wrapped_object *o = objs->head;
 	while(o != NULL){
-		struct object *tmp = o->next;
+		struct wrapped_object *tmp = o->next;
 
-		if(o->boundingBox.p[0].p[axis] >= position){
+		if(o->o.boundingBox.p[0].p[axis] >= position){
 			object_list_append(front, o);
-		}else if(o->boundingBox.p[1].p[axis] <= position){
+		}else if(o->o.boundingBox.p[1].p[axis] <= position){
 			object_list_append(back, o);
 		}else{
-			object_list_append(intersecting, o);
+			object_list_append(front, o);
+
+			struct wrapped_object *o2 = checked_malloc(sizeof(*o2));
+			*o2 = *o;
+			object_list_append(back, o2);
 		}
 
 		o = tmp;
@@ -271,102 +229,179 @@ static void split_at(struct object_list *objs, int axis, float position,
 }
 
 /**
- * Calculate the SAH cost of a split when only given the list of objects and
- * then bounding box. Splits the list, calls sah_split_cost() and then merges
- * the list back together (in different order).
+ * Calculate the SAH cost of a split.
+ *
+ * \note Uses the TRAVERSAL_COST constant.
+ *
+ * \todo Try giving 20% bonus for clipping away empty space?
  */
-static float sah_split_cost_wrapped(struct object_list *objs, int axis, float position){
+static float sah_split_cost(struct object_list *objs, int axis, float position){
+	unsigned frontCount = 0;
+	struct bounding_box frontBox = objs->box;
+	frontBox.p[0].p[axis] = position;
 
-	struct object_list front, back, intersecting;
+	unsigned backCount = 0;
+	struct bounding_box backBox = objs->box;
+	backBox.p[1].p[axis] = position;
 
-	struct bounding_box objsBoxCopy = objs->box;
+	for(struct wrapped_object *o = objs->head; o != NULL; o = o->next){
+		if(o->o.boundingBox.p[0].p[axis] >= position){
+			++frontCount;
+		}else if(o->o.boundingBox.p[1].p[axis] <= position){
+			++backCount;
+		}else{
+			// intersects the splitting plane.
+			++frontCount;
+			++backCount;
+		}
+	}
 
-	split_at(objs, axis, position,
-		&front, &back, &intersecting);
+	float wholeArea = bounding_box_area(&(objs->box));
 
-	float cost = sah_split_cost(&objsBoxCopy,
-		&(front.box), front.count,
-		&(back.box), back.count,
-		intersecting.count);
-	
-	object_list_append_list(&front, &intersecting);
-	object_list_append_list(&front, &back);
+	// probabilities of hitting 
+	float pFront = bounding_box_area(&(frontBox)) / wholeArea;
+	float pBack = bounding_box_area(&(backBox)) / wholeArea;
 
-	*objs = front;
+	float cost = TRAVERSAL_COST + pFront * frontCount + pBack * backCount;
 
 	return cost;
 }
 
 /**
- * Recursively build a KD-tree in #t from objects in #objs using the surface
- * area heuristic.
- * \return Depth of the tree constructed.
+ * Recursively build a KD-tree using surface area heuristics.
+ * The result of this function is in the depth first layout.
+ * This function deallocates all nodes of the list in objs,
+ * Realocates tree->nodes to be large enough to hold all nodes and reallocates
+ * tree->objects to store all objects including the copies needed for objects
+ * on both sides of the splitting plane.
+ * \note Index of the node being built is in #state.
+ * \param tree Tree that contains the current node.
+ * \param objs List of objects to put into the tree.
+ * \param depth How deep is the current node in the tree.
+ * \param state Indices available for extending the tree.
+ * \pre tree->nodes == NULL or points to allocated memory.
+ * \pre tree->objects points to allocated memory, large enough to hold all objects.
  */
-static unsigned kd_tree_build_rec(struct kd_tree *t, struct object_list *objs){
+static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
+	unsigned depth, struct kd_tree_build_state *state){
 
 	float bestCost = not_split_cost(objs->count);
 	bool bestIsNoSplit = true;
-	
-	kd_tree_init(t);
-	
-	// For every object try using all six bounding box faces 
-	// as a kd-tree splitting planes.
-	for(struct object *o = objs->head; o != NULL; o = o->next){
-		for(int axis = 0; axis < DIMENSIONS; ++axis){
-			for(int i = 0; i < 2; ++i){
-				float position = o->boundingBox.p[i].p[axis];
+	int bestAxis = 0;
+	float bestCoord = 0;
 
-				float cost = sah_split_cost_wrapped(
-					objs, axis, position);
+	unsigned nodeId = state->nextNodeId;
+	++(state->nextNodeId);
+	
+	if(depth < MAX_TREE_DEPTH){
+		// For every object try using all six bounding box faces 
+		// as a kd-tree splitting planes.
+		for(struct wrapped_object *o = objs->head; o != NULL; o = o->next){
+			for(int axis = 0; axis < DIMENSIONS; ++axis){
+				for(int i = 0; i < 2; ++i){
+					float coord = o->o.boundingBox.p[i].p[axis];
 
-				if(cost < bestCost){
-					bestCost = cost;
-					bestIsNoSplit = false;
-					t->axis = axis;
-					t->coord = position;
+					if(coord < objs->box.p[0].p[axis] ||
+						coord > objs->box.p[1].p[axis]){
+						// if the splitting plane would be
+						// outside this node's accessible
+						// box, then there's no point
+						// in using it.
+						continue;
+					}
+						
+
+					float cost = sah_split_cost(objs, axis, coord);
+
+					if(cost < bestCost){
+						bestCost = cost;
+						bestIsNoSplit = false;
+						bestAxis = axis;
+						bestCoord = coord;
+					}
 				}
 			}
 		}
 	}
 
+	tree->nodes = checked_realloc(tree->nodes, sizeof(struct kd_tree_node) * (nodeId + 1));
+
+	struct kd_tree_node *node = &(tree->nodes[nodeId]);
+
+	node->leaf = bestIsNoSplit;
+
 	if(bestIsNoSplit){
-		t->objs = objs->head;
+		/* store the objects and free the wrapper list nodes */
 
-		return 1;
-	}else{
-		struct object_list front, back, intersecting;
-		
-		split_at(objs, t->axis, t->coord,
-			&front, &back, &intersecting);
-		
-		t->front = checked_malloc(sizeof(*(t->front)));
-		unsigned depthFront = kd_tree_build_rec(t->front, &front);
+		node->count = objs->count;
+		node->first = state->nextObjectId;
 
-		t->back = checked_malloc(sizeof(*(t->back)));
-		unsigned depthBack = kd_tree_build_rec(t->back, &back);
 
-		t->objs = intersecting.head;
+		/* allocate space for the newly added objects */
+		tree->objects = checked_realloc(tree->objects,
+			(state->nextObjectId + objs->count) *
+			sizeof(struct object));
 
-		if(depthFront > depthBack){
-			return 1 + depthFront;
-		}else{
-			return 1 + depthBack;
+		int i = state->nextObjectId;
+		struct wrapped_object *o = objs->head;
+		while(o != NULL){
+			tree->objects[i] = o->o;
+
+			struct wrapped_object *tmp = o->next;
+			free(o);
+			o = tmp;
+
+			++i;
 		}
+
+		state->nextObjectId += objs->count;
+	}else{
+		struct object_list front, back;
+		
+		split_at(objs, bestAxis, bestCoord, &front, &back);
+
+		bool frontMoreProbable = 
+			bounding_box_area(&(front.box)) >
+			bounding_box_area(&(back.box));
+
+		unsigned lessProbableIndex;
+
+		if(frontMoreProbable){
+			kd_tree_node_build(tree, &front, depth + 1, state);
+			lessProbableIndex = state->nextNodeId;
+			kd_tree_node_build(tree, &back, depth + 1, state);
+		}else{
+			kd_tree_node_build(tree, &back, depth + 1, state);
+			lessProbableIndex = state->nextNodeId;
+			kd_tree_node_build(tree, &front, depth + 1, state);
+		}
+
+		// we can't use the node pointer because kd_tree_node_build reallocs our node array
+		tree->nodes[nodeId].frontMoreProbable = frontMoreProbable;
+		tree->nodes[nodeId].lessProbableIndex = lessProbableIndex;
+		tree->nodes[nodeId].axis = bestAxis;
+		tree->nodes[nodeId].coord = bestCoord;
 	}
 }
 
 /**
- * Fill a KD-tree t from objects in linked list objs.
- * This is not meant to be blazing fast.
- * Assumes that #t has no allocated memory.
+ * Build a KD-tree from objects in linked list #objs.
  */
-void kd_tree_build(struct kd_tree *t, struct object *objs){
+void kd_tree_build(struct kd_tree *tree, struct wrapped_object *objs){
 	printf("Building the KD-tree...\n");
 
 	struct object_list list;
 	object_list_build(&list, objs);
 
-	unsigned depth = kd_tree_build_rec(t, &list);
+	tree->nodes = NULL;
+	tree->objects = NULL;
+	
+	struct kd_tree_build_state state;
+	state.nextNodeId = 0;
+	state.nextObjectId = 0;
+	kd_tree_node_build(tree, &list, 0, &state);
 
-	printf("Finished. Tree height is %u.\n", depth);
+	printf("Done.\n");
+	printf("(Node count = %d, object count (including copies) = %d)\n",
+		state.nextNodeId, state.nextObjectId);
 }

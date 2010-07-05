@@ -3,6 +3,6 @@
 
 #include "object.h"
 
-struct object *sphere_new(const struct transform *invTransform);
+void sphere_init(struct object *o, const struct transform *invTransform);
 
 #endif
