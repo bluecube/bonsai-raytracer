@@ -91,13 +91,22 @@ void kd_tree_destroy(struct kd_tree *tree){
 }
 
 /**
+ * An item on the stack for traversing a kd-tree.
+ */
+struct traversal_stack_item{
+	unsigned nodeId;
+	float lowerBound;
+	float upperBound;
+};
+
+/**
  * Compute a first intersection of a scene and a ray with a distance
  * from the ray origin inside the closed interval
  * \f$ <lowerBound, upperBound> \f$, 
  * \return Distance to the intersection (in world coordinates),
  * This value is aways inside the closed interval \f$ <lowerBound, upperBound> \f$, 
  * or NAN if there was no intersection found.
- * \param nodes Array of KD-tree nodes.
+ * \param tree KD-tree that should be traversed.
  * \param r Ray.
  * \param lowerBound Lower bound of the intersection distance.
  * \param upperBound Upper bound of the intersection distance.
@@ -105,76 +114,93 @@ void kd_tree_destroy(struct kd_tree *tree){
  * If no intersection was found, then its value is left unchanged.
  * \pre lowerBound <= upperBound
  */
-float kd_tree_node_ray_intersection(const struct kd_tree_node *nodes, unsigned node,
-	struct object *objects,
+float kd_tree_ray_intersection(const struct kd_tree *tree,
 	const struct ray *r, float lowerBound, float upperBound,
 	struct object **result){
 
-	assert(lowerBound <= upperBound);
+	unsigned nodeId = 0;
 
-	if(nodes[node].leaf){
-		float distance = NAN;
+	struct traversal_stack_item stack[MAX_TREE_DEPTH];
+	int stackIndex = -1;
 
-		unsigned end = nodes[node].first + nodes[node].count;
-		for(unsigned i = nodes[node].first; i < end; ++i){
-			float tmp = object_ray_intersection(&(objects[i]), r, lowerBound, upperBound);
+	while(true){
+		struct kd_tree_node *node = &((tree->nodes)[nodeId]);
 
-			if(!isnan(tmp)){
-				distance = tmp;
-				*result = &(objects[i]);
-				upperBound = tmp;
+		assert(lowerBound <= upperBound);
+
+		if(node->leaf){
+			float distance = NAN;
+
+			unsigned end = node->first + node->count;
+			for(unsigned i = node->first; i < end; ++i){
+				float tmp = object_ray_intersection(&((tree->objects)[i]), r, lowerBound, upperBound);
+
+				if(!isnan(tmp)){
+					distance = tmp;
+					*result = &((tree->objects)[i]);
+					upperBound = tmp;
+				}
 			}
+
+			if(!isnan(distance)){
+				return distance;
+			}
+
+			if(stackIndex == -1){
+				return NAN;
+			}
+
+			nodeId = stack[stackIndex].nodeId;
+			lowerBound = stack[stackIndex].lowerBound;
+			upperBound = stack[stackIndex].upperBound;
+			--stackIndex;
+
+			continue;
 		}
 
-		return distance;
-	}
+		// Find out where the ray intersects the splitting plane
+		int axis = node->axis;
+		float splitDistance =
+			(node->coord - r->origin.p[axis]) * r->invDirection.p[axis];
 
-	// Find out where the ray intersects the splitting plane
-	int axis = nodes[node].axis;
-	float splitDistance =
-		(nodes[node].coord - r->origin.p[axis]) * r->invDirection.p[axis];
-
-	// Calculating the order of traversal:
-	// Four possibilities:
-	// if ray direction > 0
-	//   if nodes[node].frontMoreProbable
-	//     first = back = nodes[node].lessProbableIndex
-	//     second = front = node + 1
-	//   else
-	//     first = back = node + 1
-	//     second = front = nodes[node].lessProbableIndex
-	// else
-	//   if nodes[node].frontMoreProbable
-	//     first = front = node + 1
-	//     second = back = nodes[node].lessProbableIndex
-	//   else
-	//     first = front = nodes[node].lessProbableIndex
-	//     second = back = node + 1
-	unsigned first;
-	unsigned second;
-	if((r->direction.p[axis] > 0) ^ (nodes[node].frontMoreProbable)){
-		first = node + 1;
-		second = nodes[node].lessProbableIndex;
-	}else{
-		first = nodes[node].lessProbableIndex;
-		second = node + 1;
-	}
-
-	if(upperBound <= splitDistance){
-		return kd_tree_node_ray_intersection(nodes, first, objects, r,
-			lowerBound, upperBound, result);
-	}else if(lowerBound >= splitDistance){
-		return kd_tree_node_ray_intersection(nodes, second, objects, r,
-			lowerBound, upperBound, result);
-	}else{
-		float tmp;
-		tmp = kd_tree_node_ray_intersection(nodes, first, objects, r,
-			lowerBound, splitDistance, result);
-		if(!isnan(tmp)){
-			return tmp;
+		// Calculating the order of traversal:
+		// Four possibilities:
+		// if ray direction > 0
+		//   if node->frontMoreProbable
+		//     first = back = node->lessProbableIndex
+		//     second = front = nodeId + 1
+		//   else
+		//     first = back = nodeId + 1
+		//     second = front = node->lessProbableIndex
+		// else
+		//   if node->frontMoreProbable
+		//     first = front = nodeId + 1
+		//     second = back = node->lessProbableIndex
+		//   else
+		//     first = front = node->lessProbableIndex
+		//     second = back = nodeId + 1
+		unsigned first;
+		unsigned second;
+		if((r->direction.p[axis] > 0) ^ (node->frontMoreProbable)){
+			first = nodeId + 1;
+			second = node->lessProbableIndex;
 		}else{
-			return kd_tree_node_ray_intersection(nodes, second, objects, r,
-				splitDistance, upperBound, result);
+			first = node->lessProbableIndex;
+			second = nodeId + 1;
+		}
+
+		if(upperBound <= splitDistance){
+			nodeId = first;
+		}else if(lowerBound >= splitDistance){
+			nodeId = second;
+		}else{
+			++stackIndex;
+			stack[stackIndex].nodeId = second;
+			stack[stackIndex].lowerBound = splitDistance;
+			stack[stackIndex].upperBound = upperBound;
+
+			nodeId = first;
+			upperBound = splitDistance;
 		}
 	}
 }
