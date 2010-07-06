@@ -1,4 +1,18 @@
 Pocty ray-scene pruseciku za sekundu
+mereni je na notebooku s C2D @ 1.66GHz s gentoo.
+Klient je kompilovany s -O3 ,
+server je spousteny jako
+./server.pl -w 200 ../test-scenes/thousandSpheres.scene
 
-Prvni implementace KD-stromu bez optimalizaci - 20k
-KD-strom s depth first layoutem a 8 byte na node - 215715.26234
+Cisla tady jsou vyhozena z mereni v kodu. Jde o jeden z
+vysledku, ktery vypada (na pohled) reprezentativne (z nekolika
+pokusu).
+
+Prvni implementace KD-stromu bez optimalizaci - 19866.64403
+	(7904ada)
+
+depth first layout a 8 byte na node - 215715.26234
+	(c2dc48b)
+
+rekurze nahrazena smyckou a manualnim zasobnikem - 222731.50889
+	(f3918b8)
