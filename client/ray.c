@@ -38,7 +38,10 @@ float ray_prepare(struct ray *r){
  * object space to world space.
  * \todo Maybe there's a space for a little performance improvement?
  */
-float ray_transform(const struct ray *r, const struct transform *t, struct ray *ret){
+float ray_transform(const struct ray * restrict r,
+	const struct transform * restrict t,
+	struct ray * restrict ret){
+
 	vector_transform(&(r->origin), t, &(ret->origin));
 	vector_transform_direction(&(r->direction), t, &(ret->direction));
 	return ray_prepare(ret);

@@ -103,8 +103,9 @@ void vector_set(struct vector *ret, float x, float y, float z){
 /**
  * Transform a point (vector with the fourth value equqal to 1) with a transformation.
  */
-void vector_transform(const struct vector *v, const struct transform *t,
-	struct vector *ret){
+void vector_transform(const struct vector * restrict v,
+	const struct transform * restrict t,
+	struct vector * restrict ret){
 
 	for(int i = 0; i < DIMENSIONS; ++i){
 		ret->p[i] = t->p[9 + i];
@@ -118,8 +119,9 @@ void vector_transform(const struct vector *v, const struct transform *t,
 /**
  * Transform a direction (vector with the fourth value equqal to 0) with a transformation.
  */
-void vector_transform_direction(const struct vector *v, const struct transform *t,
-	struct vector *ret){
+void vector_transform_direction(const struct vector * restrict v,
+	const struct transform * restrict t,
+	struct vector * restrict ret){
 
 	for(int i = 0; i < DIMENSIONS; ++i){
 		ret->p[i] = 0;

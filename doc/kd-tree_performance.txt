@@ -16,3 +16,5 @@ depth first layout a 8 byte na node - 215715.26234
 
 rekurze nahrazena smyckou a manualnim zasobnikem - 222731.50889
 	(f3918b8)
+
+restrict na transformacich vektoru a paprsku - 227248.06860
