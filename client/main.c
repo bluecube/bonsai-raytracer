@@ -1,7 +1,10 @@
 /**
  * \file
- * Client entry point and vase of the network protocol.
+ * Client entry point and base of the network protocol.
  */
+
+#define _XOPEN_SOURCE 500
+
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>

@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include "random.h"
 
 #include <stdlib.h>
