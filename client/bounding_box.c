@@ -3,6 +3,36 @@
 #include <math.h>
 
 /**
+ * Calculate a ray-bounding box intersection.
+ * Uses slabs.
+ * \return Intersection distance or NaN.
+ * \todo maybe try Eisemann et al: Fast Ray/Axis-Aligned Bounding Box Overlap
+ * Tests using Ray Slopes, or
+ * http://www.flipcode.com/archives/SSE_RayBox_Intersection_Test.shtml
+ */
+float bounding_box_ray_intersection(const struct bounding_box * restrict b,
+	const struct ray * restrict r, float lowerBound, float upperBound){
+
+	float t1, t2;
+
+	for(int i = 0; i < DIMENSIONS; ++i){
+		unsigned positive = (r->invDirection.p[i] > 0);
+		t1 = (b->p[1 - positive].p[i] - r->origin.p[i]) * r->invDirection.p[i];
+		t2 = (b->p[positive].p[i] - r->origin.p[i]) * r->invDirection.p[i];
+
+		if(t2 < lowerBound || t1 > upperBound)
+			return NAN;
+
+		if(t1 > lowerBound)
+			lowerBound = t1;
+		if(t2 < upperBound)
+			upperBound = t2;
+	}
+
+	return lowerBound;
+}
+
+/**
  * Expand the bounding box to contain a point.
  */
 void bounding_box_expand(struct bounding_box *b, const struct vector *pt){
