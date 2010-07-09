@@ -1,5 +1,6 @@
 Pocty ray-scene pruseciku za sekundu
 mereni je na notebooku s C2D @ 1.66GHz s gentoo.
+Je spusteny jenom jeden klient -> pouziva se jenom jedno jadro.
 Klient je kompilovany s -O3 ,
 server je spousteny jako
 ./server.pl -w 200 ../test-scenes/thousandSpheres.scene
@@ -25,3 +26,13 @@ Pridani zapomenutych bounding box testu
 	(8882c81)
 
 Bitfields -> manualni operace s maskama a shiftama - 548533.90909
+	(06451e9)
+
+podivna vec -- zvetseni KD-tree nodu z 8 na 16 byte
+zlepsilo cas o ~ 20 % i kdyz se vsude pise ze node ma byt co nejmensi. alignment?
+uvidime potom co se raytracer trosku rozroste a bude mit realistictejsi zatez
+	- 649588.51254
+	Tohle neni commitnute.
+
+Uprava SAH cenove funkce -- 20 % bonus za odseknuti prazdneho prostoru - 581217.49771
+	(3f32657)
