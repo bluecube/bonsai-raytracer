@@ -18,6 +18,11 @@
 #define TRAVERSAL_COST 0.5
 
 /**
+ * Bonus for the SAH heuristics for clipping away an empty space.
+ */
+#define CLIP_AWAY_EMPTY_SPACE_BONUS 0.2
+
+/**
  * Maximal depth of the KD-tree.
  */
 #define MAX_TREE_DEPTH 64
@@ -306,6 +311,10 @@ static float sah_split_cost(struct object_list *objs, int axis, float position){
 	float pBack = bounding_box_area(&(backBox)) / wholeArea;
 
 	float cost = TRAVERSAL_COST + pFront * frontCount + pBack * backCount;
+
+	if(frontCount == 0 || backCount == 0){
+		cost *= 1 - CLIP_AWAY_EMPTY_SPACE_BONUS;
+	}
 
 	return cost;
 }
