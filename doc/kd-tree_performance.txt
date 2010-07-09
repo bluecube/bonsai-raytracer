@@ -22,3 +22,6 @@ restrict na transformacich vektoru a paprsku - 227248.06860
 
 Pridani zapomenutych bounding box testu 
 	(pred tim nez se transformuje paprsek) - 531322.03309
+	(8882c81)
+
+Bitfields -> manualni operace s maskama a shiftama - 548533.90909
