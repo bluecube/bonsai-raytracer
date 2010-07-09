@@ -71,12 +71,20 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 
 				ray_from_points(&r, &filmPoint, &lensCenter);
 				
+#ifndef MEASUREMENTS_KD_TREE_STATS
 				struct photon p;
 				photon_random_init(&p);
 
 				render_ray(s, &r, &p);
 				
 				photon_add_to_color(&p, pixmap);
+#else
+				struct object *obj;
+				MEASUREMENTS_RAY_SCENE_INTERSECTION();
+				kd_tree_ray_intersection(&(s->tree), &r, 0, INFINITY, &obj);
+				pixmap->r += measurementsObjectIntersectionCounter;
+				pixmap->g += measurementsTreeTraversalCounter;
+#endif
 			}
 			++pixmap;
 

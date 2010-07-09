@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define WARMUP_COUNT 10000
+#define WARMUP_COUNT 100000
 
 /**
  * Number of microseconds since some time in the past (the epoch?)
@@ -70,6 +70,18 @@ void measurements_warmup(){
 	}
 
 	printf("Warmed up (0x%0X :-) )\n", x % 0xff);
+}
+
+#endif
+
+#ifdef MEASUREMENTS_KD_TREE_STATS
+
+unsigned measurementsTreeTraversalCounter;
+unsigned measurementsObjectIntersectionCounter;
+
+void measurements_clear_kd_tree_stats(){
+	measurementsTreeTraversalCounter = 0;
+	measurementsObjectIntersectionCounter = 0;
 }
 
 #endif

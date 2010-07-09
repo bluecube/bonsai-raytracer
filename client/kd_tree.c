@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "measurements.h"
 #include "util.h"
 
 /**
@@ -123,7 +124,11 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 	struct traversal_stack_item stack[MAX_TREE_DEPTH];
 	int stackIndex = -1;
 
+	MEASUREMENTS_CLEAR_KD_TREE_STATS();
+
 	while(true){
+		MEASUREMENTS_TREE_TRAVERSAL();
+
 		struct kd_tree_node *node = &((tree->nodes)[nodeId]);
 
 		assert(lowerBound <= upperBound);
@@ -136,6 +141,8 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 
 			unsigned end = node->first + count;
 			for(unsigned i = node->first; i < end; ++i){
+				MEASUREMENTS_OBJECT_INTERSECTION();
+
 				float tmp = object_ray_intersection(
 					&((tree->objects)[i]),
 					r, lowerBound, upperBound);
@@ -270,8 +277,6 @@ static void split_at(struct object_list *objs, int axis, float position,
  * Calculate the SAH cost of a split.
  *
  * \note Uses the TRAVERSAL_COST constant.
- *
- * \todo Try giving 20% bonus for clipping away empty space?
  */
 static float sah_split_cost(struct object_list *objs, int axis, float position){
 	unsigned frontCount = 0;
@@ -440,6 +445,7 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
  */
 void kd_tree_build(struct kd_tree *tree, struct wrapped_object *objs){
 	printf("Building the KD-tree...\n");
+	printf("Node size = %u\n", sizeof(struct kd_tree_node));
 
 	struct object_list list;
 	object_list_build(&list, objs);
