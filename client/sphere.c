@@ -33,7 +33,6 @@ static void get_bounding_box(const struct transform *t, struct bounding_box *b){
  * \f$ <lowerBound, upperBound> \f$.
  * \return Distance to the intersection (in object coordinates),
  * or NAN if there is no intersection in the interval.
- * \todo Check if using the bounding box first wouldn't help.
  */
 float get_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound){
