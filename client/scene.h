@@ -13,9 +13,13 @@ struct scene{
 
 	float focalLength;
 	float apertureDiameter;
+	
+	float focus;
 
 	unsigned width;
 	unsigned height;
+
+	float sensorWidth;
 
 	struct kd_tree tree;
 };

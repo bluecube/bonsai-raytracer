@@ -166,6 +166,10 @@ static void load_camera(struct json_object *camera, struct scene *s){
 	s->raysPerPx = load_int(j_o_o_g(camera, "raysPerPx"));
 	s->focalLength = load_float(j_o_o_g(camera, "focalLength"));
 	s->apertureDiameter = load_float(j_o_o_g(camera, "apertureDiameter"));
+
+	s->focus = load_float(j_o_o_g(camera, "focus"));
+
+	s->sensorWidth = load_float(j_o_o_g(camera, "sensorWidth"));
 }
 
 /**

@@ -37,4 +37,6 @@ void vector_transform(const struct vector *v,
 void vector_transform_direction(const struct vector *v,
 	const struct transform *t, struct vector *ret);
 
+void vector_random_in_circle(float r, struct vector *val);
+
 #endif

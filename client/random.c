@@ -17,3 +17,4 @@ float random_number(float from, float to){
 int random_int(int from, int to){
 	return (random() % (to - from)) + from;
 }
+

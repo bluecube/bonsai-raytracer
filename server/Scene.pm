@@ -104,15 +104,16 @@ sub cameraSettings{
 	$_->{'focalLength'} = DEFAULT_FOCAL_LENGTH unless defined($_->{'focalLength'});
 
 	# sensor size
+	# the camera is always scaled to have the sensor width == 1
 	if(!defined($_->{'sensorSize'})){
 		$_->{'aspect'} = DEFAULT_ASPECT;
-		$_->{'focalLength'} /= DEFAULT_SENSOR_WIDTH;
+		$_->{'sensorWidth'} = DEFAULT_SENSOR_WIDTH;
 	}elsif(ref($_->{'sensorSize'}) eq 'SCALAR'){
 		$_->{'aspect'} = DEFAULT_ASPECT;
-		$_->{'focalLength'} /= $$_->{'sensorSize'} + 0;
+		$_->{'sensorWidth'} = $_->{'sensorSize'} + 0;
 	}elsif(ref($_->{'sensorSize'}) eq 'ARRAY'){
 		$_->{'aspect'} = $_->{'sensorSize'}->[0] / $_->{'sensorSize'}->[1];
-		$_->{'focalLength'} /= $_->{'sensorSize'}->[0];
+		$_->{'sensorWidth'} = $_->{'sensorSize'}->[0];
 	}
 	delete $_->{'sensorSize'};
 

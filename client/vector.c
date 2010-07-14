@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include "random.h"
 #include "transform.h"
 
 /**
@@ -129,4 +130,20 @@ void vector_transform_direction(const struct vector * restrict v,
 			ret->p[i] += v->p[j] * t->p[3 * j + i];
 		}
 	}
+}
+
+/**
+ * Get a random point inside a circle using rejection sampling.
+ * The circle lies in the Z plane and has radius r.
+ * \post val.p[X] * val.p[X] + val.p[Y] * val.p[Y] <= r * r && val.p[Z] == 0
+ */
+void vector_random_in_circle(float r, struct vector *val){
+	float x, y;
+
+	do{
+		x = random_number(-r, r);
+		y = random_number(-r, r);
+	}while(x * x + y * y > r * r);
+
+	vector_set(val, x, y, 0);
 }

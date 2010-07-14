@@ -38,38 +38,46 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
  * \param
  * \param pixmap Pointer to pixel map with result.
  * Must be large enough to hold #y0 - #y1 rows.
- * \todo Lens simulation!
  */
 void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	struct color *pixmap){
 	int ymax = chunk->top + chunk->height;
 
 	// How many meters per pixel.
-	float inc = 1 / (float)(s->width - 1);
+	float inc = s->sensorWidth / (float)(s->width - 1);
 
+	// the initial 
 	float yy = inc * (chunk->top - (float)(s->height) / 2);
 
-	struct vector filmPoint;
-	struct vector lensCenter;
-
-	vector_set(&lensCenter, 0, 0, 0);
+	float focus = s->focus / s->focalLength;
 
 	MEASUREMENTS_WARMUP();
 	MEASUREMENTS_START();
 
 	for(unsigned y = chunk->top; y < ymax; ++y){
-		float xx = -0.5;
+		float xx = - s->sensorWidth / 2;
 		for(unsigned x = 0; x < s->width; ++x){
 			color_black(pixmap);
 			for(unsigned i = 0; i < s->raysPerPx; ++i){
 				struct ray r;
 
-				vector_set(&filmPoint,
-					- (xx + random_number(0, inc)),
-					- (yy + random_number(0, inc)),
-					- s->focalLength);
+				// filmPoint = {
+				// 	-xx - random_number(0, inc),
+				// 	-yy - random_number(0, inc),
+				// 	-s->focalLength
+				// 	}
+				// focusPoint = - (lensCenter - filmPoint) * (s->focus / filmPoint.z)
 
-				ray_from_points(&r, &filmPoint, &lensCenter);
+				struct vector focusPoint;
+				vector_set(&focusPoint,
+					focus * (xx + random_number(0, inc)),
+					focus * (yy + random_number(0, inc)),
+					s->focus);
+
+				struct vector lensPoint;
+				vector_random_in_circle(s->apertureDiameter, &lensPoint);
+
+				ray_from_points(&r, &lensPoint, &focusPoint);
 				
 #ifndef MEASUREMENTS_KD_TREE_STATS
 				struct photon p;
