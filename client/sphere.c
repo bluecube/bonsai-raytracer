@@ -34,16 +34,14 @@ static void get_bounding_box(const struct transform *t, struct bounding_box *b){
  * \return Distance to the intersection (in object coordinates),
  * or NAN if there is no intersection in the interval.
  */
-float get_intersection(struct object *o, const struct ray *r,
-	float lowerBound, float upperBound){
-
+float get_intersection(struct object *o, const struct ray *r){
 	float coefs[3];
 
 	coefs[0] = vector_length_squared(&(r->origin)) - 1;
 	coefs[1] = 2 * vector_dot(&(r->origin), &(r->direction));
 	coefs[2] = 1;
 
-	return quadratic_first_root_in_interval(coefs, lowerBound, upperBound);
+	return quadratic_first_root_in_interval(coefs, r->lowerBound, r->upperBound);
 }
 
 /**

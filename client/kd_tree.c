@@ -106,23 +106,19 @@ struct traversal_stack_item{
 };
 
 /**
- * Compute a first intersection of a scene and a ray with a distance
- * from the ray origin inside the closed interval
+ * Compute a first intersection of a scene and a ray.
  * \f$ <lowerBound, upperBound> \f$, 
  * \return Distance to the intersection (in world coordinates),
  * This value is aways inside the closed interval \f$ <lowerBound, upperBound> \f$, 
  * or NAN if there was no intersection found.
  * \param tree KD-tree that should be traversed.
  * \param r Ray.
- * \param lowerBound Lower bound of the intersection distance.
- * \param upperBound Upper bound of the intersection distance.
  * \param[out] found Pointer to pointer to the found object.
  * If no intersection was found, then its value is left unchanged.
  * \pre lowerBound <= upperBound
  */
 float kd_tree_ray_intersection(const struct kd_tree *tree,
-	const struct ray *r, float lowerBound, float upperBound,
-	struct object **result){
+	struct ray *r, struct object **result){
 
 	unsigned nodeId = 0;
 
@@ -136,7 +132,7 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 
 		struct kd_tree_node *node = &((tree->nodes)[nodeId]);
 
-		assert(lowerBound <= upperBound);
+		assert(r->lowerBound <= r->upperBound);
 
 		if(node->shared & KD_TREE_NODE_LEAF_MASK){
 			float distance = NAN;
@@ -149,13 +145,12 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 				MEASUREMENTS_OBJECT_INTERSECTION();
 
 				float tmp = object_ray_intersection(
-					&((tree->objects)[i]),
-					r, lowerBound, upperBound);
+					&((tree->objects)[i]), r);
 
 				if(!isnan(tmp)){
 					distance = tmp;
 					*result = &((tree->objects)[i]);
-					upperBound = tmp;
+					r->upperBound = tmp;
 				}
 			}
 
@@ -168,8 +163,8 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 			}
 
 			nodeId = stack[stackIndex].nodeId;
-			lowerBound = stack[stackIndex].lowerBound;
-			upperBound = stack[stackIndex].upperBound;
+			r->lowerBound = stack[stackIndex].lowerBound;
+			r->upperBound = stack[stackIndex].upperBound;
 			--stackIndex;
 
 			continue;
@@ -213,18 +208,18 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 			second = nodeId + 1;
 		}
 
-		if(upperBound <= splitDistance){
+		if(r->upperBound <= splitDistance){
 			nodeId = first;
-		}else if(lowerBound >= splitDistance){
+		}else if(r->lowerBound >= splitDistance){
 			nodeId = second;
 		}else{
 			++stackIndex;
 			stack[stackIndex].nodeId = second;
 			stack[stackIndex].lowerBound = splitDistance;
-			stack[stackIndex].upperBound = upperBound;
+			stack[stackIndex].upperBound = r->upperBound;
 
 			nodeId = first;
-			upperBound = splitDistance;
+			r->upperBound = splitDistance;
 		}
 	}
 }

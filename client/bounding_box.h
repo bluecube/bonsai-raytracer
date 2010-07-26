@@ -14,7 +14,7 @@ struct bounding_box{
 };
 
 float bounding_box_ray_intersection(const struct bounding_box *b,
-	const struct ray *r, float lowerBound, float upperBound);
+	const struct ray *r);
 void bounding_box_expand(struct bounding_box *b, const struct vector *pt);
 void bounding_box_expand_box(struct bounding_box *b1,
 	const struct bounding_box *b2);

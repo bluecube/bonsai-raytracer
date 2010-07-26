@@ -22,7 +22,7 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
 	struct object *obj;
 
 	MEASUREMENTS_RAY_SCENE_INTERSECTION();
-	float distance = kd_tree_ray_intersection(&(s->tree), r, 0, INFINITY, &obj);
+	float distance = kd_tree_ray_intersection(&(s->tree), r, &obj);
 
 	if(isnan(distance)){
 		// If the ray didn't hit anything, the ray stays black.
@@ -78,6 +78,9 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				vector_random_in_circle(s->apertureDiameter, &lensPoint);
 
 				ray_from_points(&r, &lensPoint, &focusPoint);
+
+				r.lowerBound = 0;
+				r.upperBound = INFINITY;
 				
 #ifndef MEASUREMENTS_KD_TREE_STATS
 				struct photon p;

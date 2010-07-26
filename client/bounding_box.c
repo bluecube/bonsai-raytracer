@@ -11,9 +11,12 @@
  * http://www.flipcode.com/archives/SSE_RayBox_Intersection_Test.shtml
  */
 float bounding_box_ray_intersection(const struct bounding_box * restrict b,
-	const struct ray * restrict r, float lowerBound, float upperBound){
+	const struct ray * restrict r){
 
 	float t1, t2;
+
+	float lowerBound = r->lowerBound;
+	float upperBound = r->upperBound;
 
 	for(int i = 0; i < DIMENSIONS; ++i){
 		unsigned positive = (r->invDirection.p[i] > 0);
