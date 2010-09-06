@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define WARMUP_COUNT 100000
+#define WARMUP_COUNT 10000000UL
 
 /**
  * Number of microseconds since some time in the past (the epoch?)

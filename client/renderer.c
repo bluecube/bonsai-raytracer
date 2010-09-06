@@ -92,7 +92,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 #else
 				struct object *obj;
 				MEASUREMENTS_RAY_SCENE_INTERSECTION();
-				kd_tree_ray_intersection(&(s->tree), &r, 0, INFINITY, &obj);
+				kd_tree_ray_intersection(&(s->tree), &r, &obj);
 				pixmap->r += measurementsObjectIntersectionCounter;
 				pixmap->g += measurementsTreeTraversalCounter;
 #endif
