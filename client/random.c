@@ -7,8 +7,8 @@
 
 #if FLT_MANT_DIG == 24 && FLT_RADIX == 2 && !defined(DISABLE_FAST_RANDOM_NUMBER)
 
-union ulong_to_float{
-	unsigned long i;
+union uint_to_float{
+	unsigned i;
 	float f;
 };
 
@@ -21,7 +21,7 @@ static unsigned mirand = 1;
  */
 float random_number(float from, float to){
 	mirand *= 16807;
-	union ulong_to_float a;
+	union uint_to_float a;
 	a.i = (mirand & 0x007fffff) | 0x3f800000;
 	return (a.f - 1.0) * (to - from) + from;
 }
