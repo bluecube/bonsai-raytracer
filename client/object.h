@@ -22,12 +22,14 @@ struct object{
 	struct transform invTransform;
 	
 	/**
-	 * Get the first intersection point of the object.
+	 * Get the first intersection point of the object that is in the interval
+	 * \f$ <lowerBound, upperBound> \f$.
 	 * \return Distance to the intersection (in object coordinates),
 	 * or NAN if there is no intersection in the interval.
 	 * Bounding box is not checked before this method is called.
 	 */
-	float (*get_intersection)(struct object *o, const struct ray *r);
+	float (*get_intersection)(struct object *o, const struct ray *r,
+		float lowerBound, float upperBound);
 
 	/**
 	 * Get the normal vector of the object in a point #v.
@@ -56,6 +58,7 @@ struct wrapped_object{
 void object_init(struct object *o, const struct transform *t);
 void object_destroy(struct object *o);
 
-float object_ray_intersection(struct object *o, const struct ray *r);
+float object_ray_intersection(struct object *o, const struct ray *r,
+	float lowerBound, float upperBound);
 
 #endif

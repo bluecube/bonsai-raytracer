@@ -16,12 +16,6 @@ struct ray{
 	vector_t direction;
 
 	vector_t invDirection;
-
-	/** The lower bound of the distance along the ray. */
-	float lowerBound;
-
-	/** The upper bound of the distance along the ray. */
-	float upperBound;
 };
 
 float ray_transform(const struct ray *r, const struct transform *t,

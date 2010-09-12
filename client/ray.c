@@ -43,9 +43,5 @@ float ray_transform(const struct ray * restrict r,
 	ret->direction = vector_transform_direction(r->direction, t);
 
 	float ratio = ray_prepare(ret);
-
-	ret->lowerBound = r->lowerBound * ratio;
-	ret->upperBound = r->upperBound * ratio;
-
 	return ratio;
 }

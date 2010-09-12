@@ -78,7 +78,8 @@ struct kd_tree{
 void kd_tree_destroy(struct kd_tree *t);
 
 float kd_tree_ray_intersection(const struct kd_tree *tree,
-	struct ray *r, struct object **result);
+	const struct ray *r, float lowerBound, float upperBound,
+	struct object **result);
 
 void kd_tree_build(struct kd_tree *tree, struct wrapped_object *objs);
 
