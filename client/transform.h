@@ -13,9 +13,11 @@
 #include "vector.h"
 
 struct transform{
-	float p[12];
+	vector_t row[4];
 };
 
 void transform_invert(const struct transform *t, struct transform *ret);
+
+void transform_identity(struct transform *t);
 
 #endif

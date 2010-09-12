@@ -105,9 +105,14 @@ static void load_transformation(struct json_object *obj, struct transform *t){
 		protocol_error("Transformation must have exactly 12 items.");
 	}
 
-	for(int i = 0; i < 12; ++i){
- 		t->p[i] = load_float(json_object_array_get_idx(obj, i));
+	transform_identity(t);
+
+	for(int i = 0; i < 4; ++i){
+		for(int j = 0; j < 3; ++j){
+ 			t->row[i].f[j] = load_float(json_object_array_get_idx(obj, 3 * i + j));
+		}
 	}
+
 }
 
 /**

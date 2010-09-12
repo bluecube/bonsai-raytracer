@@ -16,12 +16,12 @@
 static void get_bounding_box(const struct transform *t, struct bounding_box *b){
 	for(int i = 0; i < 3; ++i){
 		vector_t tmp = vector_set(
-			t->p[0 + i],
-			t->p[3 + i],
-			t->p[6 + i]);
+			t->row[0].f[i],
+			t->row[1].f[i],
+			t->row[2].f[i]);
 		float box_size = vector_length(tmp);
-		b->p[0].f[i] = t->p[9 + i] - box_size;
-		b->p[1].f[i] = t->p[9 + i] + box_size;
+		b->p[0].f[i] = t->row[3].f[i] - box_size;
+		b->p[1].f[i] = t->row[3].f[i] + box_size;
 	}
 
 	bounding_box_fix_order(b);

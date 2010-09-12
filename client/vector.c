@@ -77,9 +77,9 @@ vector_t vector_transform(vector_t v, const struct transform *t){
 	vector_t ret;
 
 	for(int i = 0; i < 3; ++i){
-		ret.f[i] = t->p[9 + i];
+		ret.f[i] = t->row[3].f[i];
 		for(int j = 0; j < 3; ++j){
-			ret.f[i] += v.f[j] * t->p[3 * j + i];
+			ret.f[i] += v.f[j] * t->row[j].f[i];
 		}
 	}
 
@@ -96,7 +96,7 @@ vector_t vector_transform_direction(vector_t v, const struct transform *t){
 	for(int i = 0; i < 3; ++i){
 		ret.f[i] = 0;
 		for(int j = 0; j < 3; ++j){
-			ret.f[i] += v.f[j] * t->p[3 * j + i];
+			ret.f[i] += v.f[j] * t->row[j].f[i];
 		}
 	}
 
