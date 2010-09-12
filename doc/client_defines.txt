@@ -1,5 +1,5 @@
 DISABLE_MEASUREMENTS
-	Remove all the measurements code.
+	Remove the measurements code.
 	It should make the rendering a tiny bit faster.
 DISABLE_FAST_RANDOM_NUMBER
 	Use only the slow generic code for generating random floats.
@@ -8,4 +8,3 @@ MEASUREMENTS_KD_TREE_STATS
 	Render in false colors that show the statistics of KD-tree intersections
 	(red channel is a number of ray-object intersection tests, green
 	channel represents number of tree node traversals).
-	Doesn't work with disabled measurements.
