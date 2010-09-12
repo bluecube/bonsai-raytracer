@@ -138,10 +138,10 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 
 		assert(lowerBound <= upperBound);
 
-		if(node->shared & KD_TREE_NODE_LEAF_MASK){
+		if(node->flags & KD_TREE_NODE_LEAF_MASK){
 			float distance = NAN;
 
-			unsigned count = (node->shared & KD_TREE_NODE_COUNT_MASK) >>
+			unsigned count = (node->flags & KD_TREE_NODE_COUNT_MASK) >>
 				KD_TREE_NODE_COUNT_SHIFT;
 
 			unsigned end = node->first + count;
@@ -176,7 +176,7 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 		}
 
 		// Find out where the ray intersects the splitting plane
-		int axis = (node->shared & KD_TREE_NODE_AXIS_MASK) >>
+		int axis = (node->flags & KD_TREE_NODE_AXIS_MASK) >>
 			KD_TREE_NODE_AXIS_SHIFT;
 		float splitDistance =
 			(node->coord - r->origin.f[axis]) * r->invDirection.f[axis];
@@ -200,15 +200,15 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 		unsigned first;
 		unsigned second;
 		bool frontMoreProbable =
-			(node->shared & KD_TREE_NODE_FRONT_MORE_PROBABLE_MASK) != 0;
+			(node->flags & KD_TREE_NODE_FRONT_MORE_PROBABLE_MASK) != 0;
 		bool positiveDirection = (r->direction.f[axis] > 0);
 
 		if(positiveDirection != frontMoreProbable){
 			first = nodeId + 1;
-			second = (node->shared & KD_TREE_NODE_LESS_PROBABLE_INDEX_MASK) >>
+			second = (node->flags & KD_TREE_NODE_LESS_PROBABLE_INDEX_MASK) >>
 				KD_TREE_NODE_LESS_PROBABLE_INDEX_SHIFT;
 		}else{
-			first = (node->shared & KD_TREE_NODE_LESS_PROBABLE_INDEX_MASK) >>
+			first = (node->flags & KD_TREE_NODE_LESS_PROBABLE_INDEX_MASK) >>
 				KD_TREE_NODE_LESS_PROBABLE_INDEX_SHIFT;
 			second = nodeId + 1;
 		}
@@ -380,10 +380,10 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 
 	struct kd_tree_node *node = &(tree->nodes[nodeId]);
 
-	unsigned shared = 0;
+	unsigned flags = 0;
 	
 	if(bestIsNoSplit){
-		shared |= KD_TREE_NODE_LEAF_MASK;
+		flags |= KD_TREE_NODE_LEAF_MASK;
 	}
 
 	if(bestIsNoSplit){
@@ -391,7 +391,7 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 
 		node->first = state->nextObjectId;
 
-		shared |= (objs->count << KD_TREE_NODE_COUNT_SHIFT) &
+		flags |= (objs->count << KD_TREE_NODE_COUNT_SHIFT) &
 			KD_TREE_NODE_COUNT_MASK;
 
 		/* allocate space for the newly added objects */
@@ -436,17 +436,17 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 		}
 
 		if(frontMoreProbable){
-			shared |= KD_TREE_NODE_FRONT_MORE_PROBABLE_MASK;
+			flags |= KD_TREE_NODE_FRONT_MORE_PROBABLE_MASK;
 		}
 
-		shared |= (lessProbableIndex << KD_TREE_NODE_LESS_PROBABLE_INDEX_SHIFT) &
+		flags |= (lessProbableIndex << KD_TREE_NODE_LESS_PROBABLE_INDEX_SHIFT) &
 			KD_TREE_NODE_LESS_PROBABLE_INDEX_MASK;
 
-		shared |= (bestAxis << KD_TREE_NODE_AXIS_SHIFT) &
+		flags |= (bestAxis << KD_TREE_NODE_AXIS_SHIFT) &
 			KD_TREE_NODE_AXIS_MASK;
 	}
 
-	tree->nodes[nodeId].shared = shared;
+	tree->nodes[nodeId].flags = flags;
 }
 
 /**

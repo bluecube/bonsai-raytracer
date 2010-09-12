@@ -16,7 +16,7 @@ struct kd_tree_node{
 	 * The various small fields.
 	 * Use the KD_TREE_NODE_*_MASK and KD_TREE_NODE_*_SHIFT macros.
 	 */
-	uint32_t shared;
+	uint32_t flags;
 
 	union{
 		/**
