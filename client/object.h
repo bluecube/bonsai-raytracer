@@ -34,7 +34,7 @@ struct object{
 	 * The normal returned doesn't have to be normalized.
 	 * \pre #v is close to the surface of the object.
 	 */
-	void (*get_normal)(struct object *o, const struct vector *v, struct vector *normal);
+	vector_t (*get_normal)(struct object *o, vector_t pt);
 
 	/**
 	 * Custom data depending on the object type.

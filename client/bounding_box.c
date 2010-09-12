@@ -18,10 +18,10 @@ float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 	float lowerBound = r->lowerBound;
 	float upperBound = r->upperBound;
 
-	for(int i = 0; i < DIMENSIONS; ++i){
-		unsigned positive = (r->invDirection.p[i] > 0);
-		t1 = (b->p[1 - positive].p[i] - r->origin.p[i]) * r->invDirection.p[i];
-		t2 = (b->p[positive].p[i] - r->origin.p[i]) * r->invDirection.p[i];
+	for(int i = 0; i < 3; ++i){
+		unsigned positive = (r->invDirection.f[i] > 0);
+		t1 = (b->p[1 - positive].f[i] - r->origin.f[i]) * r->invDirection.f[i];
+		t2 = (b->p[positive].f[i] - r->origin.f[i]) * r->invDirection.f[i];
 
 		if(t2 < lowerBound || t1 > upperBound)
 			return NAN;
@@ -38,10 +38,10 @@ float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 /**
  * Expand the bounding box to contain a point.
  */
-void bounding_box_expand(struct bounding_box *b, const struct vector *pt){
-	for(int i = 0; i < DIMENSIONS; ++i){
-		b->p[0].p[i] = fminf(b->p[0].p[i], pt->p[i]);
-		b->p[1].p[i] = fmaxf(b->p[1].p[i], pt->p[i]);
+void bounding_box_expand(struct bounding_box *b, vector_t pt){
+	for(int i = 0; i < 3; ++i){
+		b->p[0].f[i] = fminf(b->p[0].f[i], pt.f[i]);
+		b->p[1].f[i] = fmaxf(b->p[1].f[i], pt.f[i]);
 	}
 }
 
@@ -52,9 +52,9 @@ void bounding_box_expand(struct bounding_box *b, const struct vector *pt){
 void bounding_box_expand_box(struct bounding_box *b1,
 	const struct bounding_box *b2){
 	
-	for(int i = 0; i < DIMENSIONS; ++i){
-		b1->p[0].p[i] = fminf(b1->p[0].p[i], b2->p[0].p[i]);
-		b1->p[1].p[i] = fmaxf(b1->p[1].p[i], b2->p[1].p[i]);
+	for(int i = 0; i < 3; ++i){
+		b1->p[0].f[i] = fminf(b1->p[0].f[i], b2->p[0].f[i]);
+		b1->p[1].f[i] = fmaxf(b1->p[1].f[i], b2->p[1].f[i]);
 	}
 }
 
@@ -69,9 +69,9 @@ void bounding_box_intersection(const struct bounding_box *b1,
 	const struct bounding_box *b2,
 	struct bounding_box *ret){
 
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[0].p[i] = fmaxf(b1->p[0].p[i], b2->p[0].p[i]);
-		ret->p[1].p[i] = fminf(b1->p[1].p[i], b2->p[1].p[i]);
+	for(int i = 0; i < 3; ++i){
+		ret->p[0].f[i] = fmaxf(b1->p[0].f[i], b2->p[0].f[i]);
+		ret->p[1].f[i] = fminf(b1->p[1].f[i], b2->p[1].f[i]);
 	}
 }
 
@@ -90,32 +90,28 @@ void bounding_box_transform(const struct bounding_box *b,
 	for(int x = 0; x < 2; ++x){
 		for(int y = 0; y < 2; ++y){
 			for(int z = 0; z < 2; ++z){
-				struct vector pt;
+				vector_t pt = vector_set(
+					b->p[x].x,
+					b->p[y].y,
+					b->p[z].z);
 
-				vector_set(&pt,
-					b->p[x].p[X],
-					b->p[y].p[Y],
-					b->p[z].p[Z]);
+				vector_t transformed = vector_transform(pt, t);
 
-				struct vector transformed;
-				vector_transform(&pt, t, &transformed);
-
-				bounding_box_expand(ret, &transformed);
+				bounding_box_expand(ret, transformed);
 			}
 		}
 	}
 }
 
 /**
- * Verify that p[0].p[i] < p[1].p[i] for i = X, Y, Z and
- * eventually fix it.
+ * Verify that p[0].f[i] < p[1].f[i] for i = 0 .. 2 and eventually fix it.
  */
 void bounding_box_fix_order(struct bounding_box *b){
-	for(int i = 0; i < DIMENSIONS; ++i){
-		if(b->p[0].p[i] > b->p[1].p[i]){
-			float tmp = b->p[0].p[i];
-			b->p[0].p[i] = b->p[1].p[i];
-			b->p[1].p[i] = tmp;
+	for(int i = 0; i < 3; ++i){
+		if(b->p[0].f[i] > b->p[1].f[i]){
+			float tmp = b->p[0].f[i];
+			b->p[0].f[i] = b->p[1].f[i];
+			b->p[1].f[i] = tmp;
 		}
 	}
 }
@@ -125,9 +121,9 @@ void bounding_box_fix_order(struct bounding_box *b){
  * If the box has negative length of a side, the area is 0.
  */
 float bounding_box_area(const struct bounding_box *b){
-	float x = b->p[1].p[X] - b->p[0].p[X];
-	float y = b->p[1].p[Y] - b->p[0].p[Y];
-	float z = b->p[1].p[Z] - b->p[0].p[Z];
+	float x = b->p[1].x - b->p[0].x;
+	float y = b->p[1].y - b->p[0].y;
+	float z = b->p[1].z - b->p[0].z;
 
 	if(x < 0 || y < 0 || z < 0){
 		return 0;
@@ -141,8 +137,8 @@ float bounding_box_area(const struct bounding_box *b){
  * Box emptied with this method doesn't affect the result of an union.
  */
 void bounding_box_empty(struct bounding_box *b){
-	for(int i = 0; i < DIMENSIONS; ++i){
-		b->p[0].p[i] = INFINITY;
-		b->p[1].p[i] = -INFINITY;
+	for(int i = 0; i < 3; ++i){
+		b->p[0].f[i] = INFINITY;
+		b->p[1].f[i] = -INFINITY;
 	}
 }

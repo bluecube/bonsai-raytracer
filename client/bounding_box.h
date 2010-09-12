@@ -10,12 +10,12 @@
  * Nonempty box has p[0][i] < p[1][i] for i = X, Y, Z.
  */
 struct bounding_box{
-	struct vector p[2];
+	vector_t p[2];
 };
 
 float bounding_box_ray_intersection(const struct bounding_box *b,
 	const struct ray *r);
-void bounding_box_expand(struct bounding_box *b, const struct vector *pt);
+void bounding_box_expand(struct bounding_box *b, vector_t pt);
 void bounding_box_expand_box(struct bounding_box *b1,
 	const struct bounding_box *b2);
 

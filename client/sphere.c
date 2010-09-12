@@ -14,15 +14,14 @@
  * Calculate the minimum bounding box.
  */
 static void get_bounding_box(const struct transform *t, struct bounding_box *b){
-	for(int i = 0; i < DIMENSIONS; ++i){
-		struct vector tmp;
-		vector_set(&tmp,
+	for(int i = 0; i < 3; ++i){
+		vector_t tmp = vector_set(
 			t->p[0 + i],
 			t->p[3 + i],
 			t->p[6 + i]);
-		float box_size = vector_length(&tmp);
-		b->p[0].p[i] = t->p[9 + i] - box_size;
-		b->p[1].p[i] = t->p[9 + i] + box_size;
+		float box_size = vector_length(tmp);
+		b->p[0].f[i] = t->p[9 + i] - box_size;
+		b->p[1].f[i] = t->p[9 + i] + box_size;
 	}
 
 	bounding_box_fix_order(b);
@@ -37,8 +36,8 @@ static void get_bounding_box(const struct transform *t, struct bounding_box *b){
 float get_intersection(struct object *o, const struct ray *r){
 	float coefs[3];
 
-	coefs[0] = vector_length_squared(&(r->origin)) - 1;
-	coefs[1] = 2 * vector_dot(&(r->origin), &(r->direction));
+	coefs[0] = vector_length_squared(r->origin) - 1;
+	coefs[1] = 2 * vector_dot(r->origin, r->direction);
 	coefs[2] = 1;
 
 	return quadratic_first_root_in_interval(coefs, r->lowerBound, r->upperBound);
@@ -48,8 +47,8 @@ float get_intersection(struct object *o, const struct ray *r){
  * Get the normal vector of the object in a point #v.
  * \pre #v is close to the surface of the object.
  */
-static void get_normal(struct object *sphere, const struct vector *v, struct vector *normal){
-	*normal = *v;
+static vector_t get_normal(struct object *sphere, vector_t pt){
+	return pt;
 }
 
 /**

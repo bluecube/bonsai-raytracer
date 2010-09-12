@@ -6,55 +6,52 @@
 #include "transform.h"
 
 /**
- * Add two vetors, store output in #ret.
+ * Sum two vectors, return output.
  */
-void vector_add(const struct vector *v1, const struct vector *v2,
-	struct vector *ret){
-	
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[i] = v1->p[i] + v2->p[i];
+vector_t vector_add(vector_t v1, vector_t v2){
+	vector_t ret;
+
+	for(int i = 0; i < 3; ++i){
+		ret.f[i] = v1.f[i] + v2.f[i];
 	}
+
+	return ret;
 }
 
-/**
- * Substract #v2 from #v1, store output in #ret..
+/** 
+ * Substract v2 from v1, return output.
  */
-void vector_substract(const struct vector *v1, const struct vector *v2,
-	struct vector *ret){
-	
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[i] = v1->p[i] - v2->p[i];
-	}
-}
+vector_t vector_substract(vector_t v1, vector_t v2){
+	vector_t ret;
 
-/**
- * Dot product of two vetcors, return output.
- */
-float vector_dot(const struct vector *v1, const struct vector *v2){
-	float ret = 0;
-
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret += v1->p[i] * v2->p[i];
+	for(int i = 0; i < 3; ++i){
+		ret.f[i] = v1.f[i] - v2.f[i];
 	}
 
 	return ret;
 }
 
 /**
- * Absolute value of a vector.
+ * Dot product of two vetcors, return output.
  */
-float vector_length(const struct vector *v){
-	return sqrt(vector_length_squared(v));
+float vector_dot(vector_t v1, vector_t v2){
+	float ret = 0;
+
+	for(int i = 0; i < 3; ++i){
+		ret += v1.f[i] * v2.f[i];
+	}
+
+	return ret;
 }
 
 /**
  * Return vector_length(v) * vector_length(v); faster.
  */
-float vector_length_squared(const struct vector *v){
+float vector_length_squared(vector_t v){
 	float ret = 0;
 
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret += v->p[i] * v->p[i];
+	for(int i = 0; i < 3; ++i){
+		ret += v.f[i] * v.f[i];
 	}
 
 	return ret;
@@ -63,81 +60,54 @@ float vector_length_squared(const struct vector *v){
 /**
  * Multiply a vector by a scalar.
  */
-void vector_multiply(const struct vector *v1, float f, struct vector *ret){
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[i] = v1->p[i] * f;
+vector_t vector_multiply(vector_t v, float f){
+	vector_t ret;
+
+	for(int i = 0; i < 3; ++i){
+		ret.f[i] = v.f[i] * f;
 	}
-}
 
-/**
- * Divide a vector by a scalar.
- */
-void vector_divide(const struct vector *v1, float f, struct vector *ret){
-	vector_multiply(v1, 1 / f, ret);
-}
-
-/**
- * Change the absolute value of a vector to 1.
- */
-void vector_normalize(const struct vector *v, struct vector *ret){
-	vector_divide(v, vector_length(v), ret);
-}
-
-/**
- * Set the fields of a vector and normalize if.
- */
-void vector_set_normalized(struct vector *ret, float x, float y, float z){
-	struct vector tmp;
-	vector_set(&tmp, x, y, z);
-	vector_normalize(&tmp, ret);
-}
-
-/**
- * Set the fields of a vector.
- */
-void vector_set(struct vector *ret, float x, float y, float z){
-	ret->p[X] = x;
-	ret->p[Y] = y;
-	ret->p[Z] = z;
+	return ret;
 }
 
 /**
  * Transform a point (vector with the fourth value equqal to 1) with a transformation.
  */
-void vector_transform(const struct vector * restrict v,
-	const struct transform * restrict t,
-	struct vector * restrict ret){
+vector_t vector_transform(vector_t v, const struct transform *t){
+	vector_t ret;
 
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[i] = t->p[9 + i];
-		for(int j = 0; j < DIMENSIONS; ++j){
-			ret->p[i] += v->p[j] * t->p[3 * j + i];
+	for(int i = 0; i < 3; ++i){
+		ret.f[i] = t->p[9 + i];
+		for(int j = 0; j < 3; ++j){
+			ret.f[i] += v.f[j] * t->p[3 * j + i];
 		}
 	}
+
+	return ret;
 }
 
 
 /**
  * Transform a direction (vector with the fourth value equqal to 0) with a transformation.
  */
-void vector_transform_direction(const struct vector * restrict v,
-	const struct transform * restrict t,
-	struct vector * restrict ret){
+vector_t vector_transform_direction(vector_t v, const struct transform *t){
+	vector_t ret;
 
-	for(int i = 0; i < DIMENSIONS; ++i){
-		ret->p[i] = 0;
-		for(int j = 0; j < DIMENSIONS; ++j){
-			ret->p[i] += v->p[j] * t->p[3 * j + i];
+	for(int i = 0; i < 3; ++i){
+		ret.f[i] = 0;
+		for(int j = 0; j < 3; ++j){
+			ret.f[i] += v.f[j] * t->p[3 * j + i];
 		}
 	}
+
+	return ret;
 }
 
 /**
  * Get a random point inside a circle using rejection sampling.
  * The circle lies in the Z plane and has radius r.
- * \post val.p[X] * val.p[X] + val.p[Y] * val.p[Y] <= r * r && val.p[Z] == 0
  */
-void vector_random_in_circle(float r, struct vector *val){
+vector_t vector_random_in_circle(float r){
 	float x, y;
 
 	do{
@@ -145,5 +115,5 @@ void vector_random_in_circle(float r, struct vector *val){
 		y = random_number(-r, r);
 	}while(x * x + y * y > r * r);
 
-	vector_set(val, x, y, 0);
+	return vector_set(x, y, 0);
 }

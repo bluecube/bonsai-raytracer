@@ -10,12 +10,12 @@
  */
 struct ray{
 	/** Origin of the ray. */
-	struct vector origin;
+	vector_t origin;
 
 	/** Normalized direction of the ray. */
-	struct vector direction;
+	vector_t direction;
 
-	struct vector invDirection;
+	vector_t invDirection;
 
 	/** The lower bound of the distance along the ray. */
 	float lowerBound;
@@ -27,8 +27,7 @@ struct ray{
 float ray_transform(const struct ray *r, const struct transform *t,
 	struct ray *ret);
 
-void ray_from_points(struct ray *r, const struct vector *origin,
-	const struct vector *point);
+void ray_from_points(struct ray *r, vector_t origin, vector_t point);
 float ray_prepare(struct ray *r);
 
 

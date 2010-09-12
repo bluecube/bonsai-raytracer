@@ -8,35 +8,36 @@
 #ifndef BONSAI_CLIENT_VECTOR_H
 #define BONSAI_CLIENT_VECTOR_H
 
-#define X 0
-#define Y 1
-#define Z 2
-
-#define DIMENSIONS 3
-
 struct transform;
 
-struct vector{
-	float p[DIMENSIONS];
-};
+/**
+ * 3D vector.
+ */
+typedef union{
+	float f[3];
+	struct{
+		float x;
+		float y;
+		float z;
+	};
+} vector_t;
 
-void vector_add(const struct vector *v1, const struct vector *v2,
-	struct vector *ret);
-void vector_substract(const struct vector *v1,
-	const struct vector *v2, struct vector *ret);
-float vector_dot(const struct vector *v1, const struct vector *v2);
-float vector_length(const struct vector *v);
-float vector_length_squared(const struct vector *v);
-void vector_multiply(const struct vector *v1, float f, struct vector *ret);
-void vector_divide(const struct vector *v1, float f, struct vector *ret);
-void vector_normalize(const struct vector *v, struct vector *ret);
-void vector_set_normalized(struct vector *v, float x, float y, float z);
-void vector_set(struct vector *v, float x, float y, float z);
-void vector_transform(const struct vector *v,
-	const struct transform *t, struct vector *ret);
-void vector_transform_direction(const struct vector *v,
-	const struct transform *t, struct vector *ret);
+vector_t vector_add(vector_t v1, vector_t v2);
+vector_t vector_substract(vector_t v1, vector_t v2);
+float vector_dot(vector_t v1, vector_t v2);
+static inline float vector_length(vector_t v);
+float vector_length_squared(vector_t v);
+vector_t vector_multiply(vector_t v1, float f);
+static inline vector_t vector_divide(vector_t v, float f);
+static inline vector_t vector_normalize(vector_t v);
+static inline vector_t vector_set(float x, float y, float z);
+static inline vector_t vector_set_normalized(float x, float y, float z);
 
-void vector_random_in_circle(float r, struct vector *val);
+vector_t vector_transform(vector_t v, const struct transform *t);
+vector_t vector_transform_direction(vector_t v, const struct transform *t);
+
+vector_t vector_random_in_circle(float r);
+
+#include "vector_inlines.h"
 
 #endif

@@ -174,7 +174,7 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 		int axis = (node->shared & KD_TREE_NODE_AXIS_MASK) >>
 			KD_TREE_NODE_AXIS_SHIFT;
 		float splitDistance =
-			(node->coord - r->origin.p[axis]) * r->invDirection.p[axis];
+			(node->coord - r->origin.f[axis]) * r->invDirection.f[axis];
 
 		// Calculating the order of traversal:
 		// Four possibilities:
@@ -196,7 +196,7 @@ float kd_tree_ray_intersection(const struct kd_tree *tree,
 		unsigned second;
 		bool frontMoreProbable =
 			(node->shared & KD_TREE_NODE_FRONT_MORE_PROBABLE_MASK) != 0;
-		bool positiveDirection = (r->direction.p[axis] > 0);
+		bool positiveDirection = (r->direction.f[axis] > 0);
 
 		if(positiveDirection != frontMoreProbable){
 			first = nodeId + 1;
@@ -248,16 +248,16 @@ static void split_at(struct object_list *objs, int axis, float position,
 	front->box = objs->box;
 	back->box = objs->box;
 
-	front->box.p[0].p[axis] = position;
-	back->box.p[1].p[axis] = position;
+	front->box.p[0].f[axis] = position;
+	back->box.p[1].f[axis] = position;
 
 	struct wrapped_object *o = objs->head;
 	while(o != NULL){
 		struct wrapped_object *tmp = o->next;
 
-		if(o->o.boundingBox.p[0].p[axis] >= position){
+		if(o->o.boundingBox.p[0].f[axis] >= position){
 			object_list_append(front, o);
-		}else if(o->o.boundingBox.p[1].p[axis] <= position){
+		}else if(o->o.boundingBox.p[1].f[axis] <= position){
 			object_list_append(back, o);
 		}else{
 			object_list_append(front, o);
@@ -281,16 +281,16 @@ static void split_at(struct object_list *objs, int axis, float position,
 static float sah_split_cost(struct object_list *objs, int axis, float position){
 	unsigned frontCount = 0;
 	struct bounding_box frontBox = objs->box;
-	frontBox.p[0].p[axis] = position;
+	frontBox.p[0].f[axis] = position;
 
 	unsigned backCount = 0;
 	struct bounding_box backBox = objs->box;
-	backBox.p[1].p[axis] = position;
+	backBox.p[1].f[axis] = position;
 
 	for(struct wrapped_object *o = objs->head; o != NULL; o = o->next){
-		if(o->o.boundingBox.p[0].p[axis] >= position){
+		if(o->o.boundingBox.p[0].f[axis] >= position){
 			++frontCount;
-		}else if(o->o.boundingBox.p[1].p[axis] <= position){
+		}else if(o->o.boundingBox.p[1].f[axis] <= position){
 			++backCount;
 		}else{
 			// intersects the splitting plane.
@@ -344,12 +344,12 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 		// For every object try using all six bounding box faces 
 		// as a kd-tree splitting planes.
 		for(struct wrapped_object *o = objs->head; o != NULL; o = o->next){
-			for(int axis = 0; axis < DIMENSIONS; ++axis){
+			for(int axis = 0; axis < 3; ++axis){
 				for(int i = 0; i < 2; ++i){
-					float coord = o->o.boundingBox.p[i].p[axis];
+					float coord = o->o.boundingBox.p[i].f[axis];
 
-					if(coord < objs->box.p[0].p[axis] ||
-						coord > objs->box.p[1].p[axis]){
+					if(coord < objs->box.p[0].f[axis] ||
+						coord > objs->box.p[1].f[axis]){
 						// if the splitting plane would be
 						// outside this node's accessible
 						// box, then there's no point

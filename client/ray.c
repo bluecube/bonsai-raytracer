@@ -4,10 +4,9 @@
  * Fill in the values for a ray starting in #origin and going through #point.
  * \see ray_prepare()
  */
-void ray_from_points(struct ray *r, const struct vector *origin,
-	const struct vector *point){
-	r->origin = *origin;
-	vector_substract(point, origin, &(r->direction));
+void ray_from_points(struct ray *r, vector_t origin, const vector_t point){
+	r->origin = origin;
+	r->direction = vector_substract(point, origin);
 
 	ray_prepare(r);
 }
@@ -17,18 +16,16 @@ void ray_from_points(struct ray *r, const struct vector *origin,
  * \return Length of the direction vector before normalization.
  */
 float ray_prepare(struct ray *r){
-	struct vector tmp;
+	float length = vector_length(r->direction);
+	vector_t dir = vector_divide(r->direction, length);
 
-	float ret = vector_length(&r->direction);
-	vector_multiply(&(r->direction), 1 / ret, &tmp);
+	r->direction = dir;
 
-	r->direction = tmp;
-
-	for(int i = 0; i < DIMENSIONS; ++i){
-		r->invDirection.p[i] = 1 / tmp.p[i];
+	for(int i = 0; i < 3; ++i){
+		r->invDirection.f[i] = 1 / dir.f[i];
 	}
 
-	return ret;
+	return length;
 }
 
 /**
@@ -39,11 +36,11 @@ float ray_prepare(struct ray *r){
  * \todo Maybe there's a space for a little performance improvement?
  */
 float ray_transform(const struct ray * restrict r,
-	const struct transform * restrict t,
-	struct ray * restrict ret){
+	const struct transform *restrict t,
+	struct ray *restrict ret){
 
-	vector_transform(&(r->origin), t, &(ret->origin));
-	vector_transform_direction(&(r->direction), t, &(ret->direction));
+	ret->origin = vector_transform(r->origin, t);
+	ret->direction = vector_transform_direction(r->direction, t);
 
 	float ratio = ray_prepare(ret);
 

@@ -101,11 +101,11 @@ static void load_transformation(struct json_object *obj, struct transform *t){
 
 	int length = json_object_array_length(obj);
 
-	if(length != TRANSFORM_SIZE){
-		protocol_error("Transformation must have exactly %d items.", TRANSFORM_SIZE);
+	if(length != 12){
+		protocol_error("Transformation must have exactly 12 items.");
 	}
 
-	for(int i = 0; i < TRANSFORM_SIZE; ++i){
+	for(int i = 0; i < 12; ++i){
  		t->p[i] = load_float(json_object_array_get_idx(obj, i));
 	}
 }

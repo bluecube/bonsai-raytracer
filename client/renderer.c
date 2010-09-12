@@ -68,16 +68,14 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				// 	}
 				// focusPoint = - (lensCenter - filmPoint) * (s->focus / filmPoint.z)
 
-				struct vector focusPoint;
-				vector_set(&focusPoint,
+				vector_t focusPoint = vector_set(
 					focus * (xx + random_number(0, inc)),
 					focus * (yy + random_number(0, inc)),
 					s->focus);
 
-				struct vector lensPoint;
-				vector_random_in_circle(s->apertureDiameter, &lensPoint);
+				vector_t lensPoint = vector_random_in_circle(s->apertureDiameter);
 
-				ray_from_points(&r, &lensPoint, &focusPoint);
+				ray_from_points(&r, lensPoint, focusPoint);
 
 				r.lowerBound = 0;
 				r.upperBound = INFINITY;
