@@ -1,4 +1,6 @@
-#include "vector.h"
+#ifdef DISABLE_SSE
+
+#include "vector-nosse.h"
 
 #include <math.h>
 
@@ -117,3 +119,5 @@ vector_t vector_random_in_circle(float r){
 
 	return vector_set(x, y, 0);
 }
+
+#endif

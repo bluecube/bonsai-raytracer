@@ -2,7 +2,7 @@
 
 cd $(dirname $0)/..
 
-make DEBUG=0 clean all
+make DEBUG=0 $@ clean all
 
 cd ../server
 

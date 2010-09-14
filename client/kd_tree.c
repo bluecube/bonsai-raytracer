@@ -376,7 +376,11 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 		}
 	}
 
-	tree->nodes = checked_realloc(tree->nodes, sizeof(struct kd_tree_node) * (nodeId + 1));
+	tree->nodes = checked_realloc_x(
+		tree->nodes,
+		sizeof(struct kd_tree_node) * (nodeId + 1),
+		sizeof(struct kd_tree_node) * nodeId);
+
 
 	struct kd_tree_node *node = &(tree->nodes[nodeId]);
 
@@ -395,9 +399,9 @@ static void kd_tree_node_build(struct kd_tree *tree, struct object_list *objs,
 			KD_TREE_NODE_COUNT_MASK;
 
 		/* allocate space for the newly added objects */
-		tree->objects = checked_realloc(tree->objects,
-			(state->nextObjectId + objs->count) *
-			sizeof(struct object));
+		tree->objects = checked_realloc_x(tree->objects,
+			(state->nextObjectId + objs->count) * sizeof(struct object),
+			state->nextObjectId * sizeof(struct object));
 
 		int i = state->nextObjectId;
 		struct wrapped_object *o = objs->head;

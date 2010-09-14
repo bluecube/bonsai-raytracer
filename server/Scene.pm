@@ -214,7 +214,7 @@ sub object{
 	}
 	
 	my $newTransform = &{$objectTypes{$type}}() if defined($objectTypes{$type});
-	print "Object: $type\n";
+	#print "Object: $type\n";
 	
 	if($newTransform){
 		$transform = $newTransform * $transform;

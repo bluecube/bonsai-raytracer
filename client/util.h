@@ -33,6 +33,7 @@ void warning_internal(int e, const char *file, int line,
 
 void *checked_malloc(size_t size);
 void *checked_realloc(void *ptr, size_t size);
+void *checked_realloc_x(void *ptr, size_t newSize, size_t oldSize);
 char *checked_strdup(const char *s);
 
 /**

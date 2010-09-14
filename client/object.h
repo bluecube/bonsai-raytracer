@@ -9,6 +9,8 @@
 
 /**
  * Geometric object with a surface.
+ * \note Don't forget to add items that need to be aligned
+ * together to the front.
  */
 struct object{
 	/**
@@ -19,7 +21,8 @@ struct object{
 	/**
 	 * Transformation from world coordinates to object coordinates.
 	 */
-	struct transform invTransform;
+	struct transform invTransform
+	;
 	
 	/**
 	 * Get the first intersection point of the object that is in the interval
@@ -37,12 +40,7 @@ struct object{
 	 * \pre #v is close to the surface of the object.
 	 */
 	vector_t (*get_normal)(struct object *o, vector_t pt);
-
-	/**
-	 * Custom data depending on the object type.
-	 */
-	float customFloats[OBJECT_CUSTOM_FLOAT_COUNT];
-};
+} __attribute__ ((aligned (16)));
 
 /**
  * Structure used when building the tree.\

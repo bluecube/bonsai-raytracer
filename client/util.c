@@ -6,6 +6,8 @@
 #include <stdarg.h>
 #include <errno.h>
 
+#include <malloc.h>
+
 /**
  * Print a formated error message.
  * \param error Errno, or 0 if no error description should be printed.
@@ -72,9 +74,24 @@ void warning_internal(int e, const char *file, int line,
  * then calls error() and terminates program.
  */
 void *checked_malloc(size_t size){
-	void *p = malloc(size);
+	//void *p = malloc(size);
+	void *p = memalign(16, size);
 	if(!p)
 		error(errno, NULL);
+	return p;
+}
+
+/**
+ * Reallocate a block of memory using checked_alloc rather than realloc.
+ * It's not as efficient as realloc, but the memory is aligned.
+ */
+void *checked_realloc_x(void *ptr, size_t newSize, size_t oldSize){
+	void *p = checked_malloc(newSize);
+
+	memcpy(p, ptr, newSize < oldSize ? newSize : oldSize);
+
+	free(ptr);
+
 	return p;
 }
 
