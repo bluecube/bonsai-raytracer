@@ -2,6 +2,7 @@
 
 #ifndef DISABLE_SSE
 #include <xmmintrin.h>
+#include <emmintrin.h>
 #endif
 
 /**
@@ -33,7 +34,7 @@ float ray_transform(const struct ray * restrict r,
 	ret->origin = vector_transform(r->origin, t);
 	ret->direction = vector_transform_direction(r->direction, t);
 
-#ifndef DISABLE_SSE
+#ifdef DISABLE_SSE
 	float length = vector_length(ret->direction);
 	vector_t dir = vector_divide(ret->direction, length);
 
@@ -46,10 +47,10 @@ float ray_transform(const struct ray * restrict r,
 	return length;
 #else
 	vector_t length;
-	length.m = __mm_sqrt_ps(vector_dot_internal(r->direction.m, r->direction.m));
-	r->direction.m = _mm_div_ps(v.m, length.m);
+	length.m = _mm_sqrt_ps(vector_dot_internal(ret->direction.m, ret->direction.m));
+	ret->direction.m = _mm_div_ps(ret->direction.m, length.m);
 
-	r-invDirection.>m = _mm_rcp_ps(r->direction.m)
+	ret->invDirection.m = _mm_rcp_ps(ret->direction.m);
 
 	return length.x;
 #endif
