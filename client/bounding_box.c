@@ -2,17 +2,18 @@
 
 #include <math.h>
 
+#ifndef DISABLE_SSE
+#include <xmmintrin.h>
+#endif
+
 /**
  * Calculate a ray-bounding box intersection.
- * Uses slabs.
+ * SSE version is modified from http://www.flipcode.com/archives/SSE_RayBox_Intersection_Test.shtml
  * \return Intersection distance or NaN.
- * \todo maybe try Eisemann et al: Fast Ray/Axis-Aligned Bounding Box Overlap
- * Tests using Ray Slopes, or
- * http://www.flipcode.com/archives/SSE_RayBox_Intersection_Test.shtml
  */
 float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 	const struct ray * restrict r, float lowerBound, float upperBound){
-
+#ifdef DISABLE_SSE
 	float t1, t2;
 
 	for(int i = 0; i < 3; ++i){
@@ -20,8 +21,9 @@ float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 		t1 = (b->p[1 - positive].f[i] - r->origin.f[i]) * r->invDirection.f[i];
 		t2 = (b->p[positive].f[i] - r->origin.f[i]) * r->invDirection.f[i];
 
-		if(t2 < lowerBound || t1 > upperBound)
+		if(t2 < lowerBound || t1 > upperBound){
 			return NAN;
+		}
 
 		if(t1 > lowerBound)
 			lowerBound = t1;
@@ -30,6 +32,38 @@ float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 	}
 
 	return lowerBound;
+#else
+	__m128 l1 = _mm_mul_ps(_mm_sub_ps(b->p[0].m, r->origin.m), r->invDirection.m);
+	__m128 l2 = _mm_mul_ps(_mm_sub_ps(b->p[1].m, r->origin.m), r->invDirection.m);
+
+	__m128 upper = _mm_set1_ps(upperBound);
+	__m128 l1max = _mm_min_ps(l1, upper);
+	__m128 l2max = _mm_min_ps(l2, upper);
+	__m128 lmax = _mm_max_ps(l1max, l2max);
+
+	__m128 lower = _mm_set1_ps(lowerBound);
+	__m128 l1min = _mm_max_ps(l1, lower);
+	__m128 l2min = _mm_max_ps(l2, lower);
+	__m128 lmin = _mm_min_ps(l1min, l2min);
+
+	__m128 lmax0 = _mm_shuffle_ps(lmax, lmax, _MM_SHUFFLE(0, 3, 2, 1));
+	lmax = _mm_min_ss(lmax, lmax0);
+	__m128 lmax1 = _mm_movehl_ps(lmax, lmax);
+	lmax = _mm_min_ss(lmax, lmax1);
+
+	__m128 lmin0 = _mm_shuffle_ps(lmin, lmin, _MM_SHUFFLE(0, 3, 2, 1));
+	lmin = _mm_max_ss(lmin, lmin0);
+	__m128 lmin1 = _mm_movehl_ps(lmin, lmin);
+	lmin = _mm_max_ss(lmin, lmin1);
+
+	if(_mm_comige_ss(lmax, lmin)){// && _mm_comige_ss(lmin, lower) && _mm_comige_ss(upper, lmax)){
+		float distance;
+		_mm_store_ss(&distance, lmin);
+		return distance;
+	}else{
+		return NAN;
+	}
+#endif
 }
 
 /**
