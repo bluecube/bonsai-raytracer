@@ -53,14 +53,21 @@ vector_t vector_transform_direction(vector_t v, const struct transform *t){
  * The circle lies in the Z plane and has radius r.
  */
 vector_t vector_random_in_circle(float r){
-	float x, y;
-
+	__m128 coords;
+	__m128 dist;
 	do{
-		x = random_number(-r, r);
-		y = random_number(-r, r);
-	}while(x * x + y * y > r * r);
+		coords = random_number2();
+		
+		dist = _mm_mul_ps(coords, coords);
+		dist = _mm_add_ss(dist, _mm_movehl_ps(dist, dist));
+	}while(_mm_comige_ss(dist, _mm_set_ss(1)));
 
-	return vector_set(x, y, 0);
+	coords = _mm_shuffle_ps(coords, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 2, 0));
+
+	vector_t ret;
+	ret.m = _mm_mul_ps(coords, _mm_set1_ps(r));
+
+	return ret;
 }
 
 #endif

@@ -18,6 +18,7 @@
 #include "net_json.h"
 #include "object.h"
 #include "protocol.h"
+#include "random.h"
 #include "renderer.h"
 #include "scene.h"
 #include "shared_defs.h"
@@ -83,6 +84,8 @@ printf("Finishing\n");
 }
 
 int main(int argc, char **argv){
+	init_random();
+
 	printf("Bonsai raytracer client v%d.%d.%d\n\n",
 		CLIENT_VERSION_MAJOR,
 		CLIENT_VERSION_MINOR,

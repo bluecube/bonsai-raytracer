@@ -46,7 +46,6 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	// How many meters per pixel.
 	float inc = s->sensorWidth / (float)(s->width - 1);
 
-	// the initial 
 	float yy = inc * (chunk->top - (float)(s->height) / 2);
 
 	float focus = s->focus / s->focalLength;
