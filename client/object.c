@@ -31,8 +31,8 @@ void object_destroy(struct object *o){
 float object_ray_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound){
 
-	if(isnan(bounding_box_ray_intersection(
-		&(o->boundingBox), r, lowerBound, upperBound))){
+	if(!bounding_box_ray_intersection(
+		&(o->boundingBox), r, lowerBound, upperBound)){
 		return NAN;
 	}
 

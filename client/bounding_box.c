@@ -11,7 +11,7 @@
  * SSE version is modified from http://www.flipcode.com/archives/SSE_RayBox_Intersection_Test.shtml
  * \return Intersection distance or NaN.
  */
-float bounding_box_ray_intersection(const struct bounding_box * restrict b,
+bool bounding_box_ray_intersection(const struct bounding_box * restrict b,
 	const struct ray * restrict r, float lowerBound, float upperBound){
 #ifdef DISABLE_SSE
 	float t1, t2;
@@ -56,13 +56,7 @@ float bounding_box_ray_intersection(const struct bounding_box * restrict b,
 	__m128 lmin1 = _mm_movehl_ps(lmin, lmin);
 	lmin = _mm_max_ss(lmin, lmin1);
 
-	if(_mm_comige_ss(lmax, lmin)){// && _mm_comige_ss(lmin, lower) && _mm_comige_ss(upper, lmax)){
-		float distance;
-		_mm_store_ss(&distance, lmin);
-		return distance;
-	}else{
-		return NAN;
-	}
+	return _mm_comige_ss(lmax, lmin);
 #endif
 }
 

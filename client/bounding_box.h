@@ -1,6 +1,8 @@
 #ifndef BONSAI_CLIENT_BOUNDING_BOX_H
 #define BONSAI_CLIENT_BOUNDING_BOX_H
 
+#include <stdbool.h>
+
 #include "ray.h"
 #include "transform.h"
 #include "vector.h"
@@ -13,7 +15,7 @@ struct bounding_box{
 	vector_t p[2];
 };
 
-float bounding_box_ray_intersection(const struct bounding_box *b,
+bool bounding_box_ray_intersection(const struct bounding_box *b,
 	const struct ray *r, float lowerBound, float upperBound);
 void bounding_box_expand(struct bounding_box *b, vector_t pt);
 void bounding_box_expand_box(struct bounding_box *b1,
