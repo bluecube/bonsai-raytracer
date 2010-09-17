@@ -22,7 +22,7 @@ bool bounding_box_ray_intersection(const struct bounding_box * restrict b,
 		t2 = (b->p[positive].f[i] - r->origin.f[i]) * r->invDirection.f[i];
 
 		if(t2 < lowerBound || t1 > upperBound){
-			return NAN;
+			return false;
 		}
 
 		if(t1 > lowerBound)
@@ -31,7 +31,7 @@ bool bounding_box_ray_intersection(const struct bounding_box * restrict b,
 			upperBound = t2;
 	}
 
-	return lowerBound;
+	return true;
 #else
 	__m128 l1 = _mm_mul_ps(_mm_sub_ps(b->p[0].m, r->origin.m), r->invDirection.m);
 	__m128 l2 = _mm_mul_ps(_mm_sub_ps(b->p[1].m, r->origin.m), r->invDirection.m);
