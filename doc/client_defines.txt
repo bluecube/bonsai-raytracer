@@ -8,3 +8,6 @@ MEASUREMENTS_KD_TREE_STATS
 	Render in false colors that show the statistics of KD-tree intersections
 	(red channel is a number of ray-object intersection tests, green
 	channel represents number of tree node traversals).
+DISABLE_SSE
+	Disable all the code with SSE intrinsics. The result will be slower but
+	more portable.
