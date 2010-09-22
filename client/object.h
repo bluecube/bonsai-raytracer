@@ -18,11 +18,16 @@ struct object{
 	 */
 	struct bounding_box boundingBox;
 
+
+	/**
+	 * Transformation from object coordinates to world coordinates.
+	 */
+	struct transform transform;
+
 	/**
 	 * Transformation from world coordinates to object coordinates.
 	 */
-	struct transform invTransform
-	;
+	struct transform invTransform;
 	
 	/**
 	 * Get the first intersection point of the object that is in the interval
@@ -35,7 +40,7 @@ struct object{
 		float lowerBound, float upperBound);
 
 	/**
-	 * Get the normal vector of the object in a point #v.
+	 * Get the normal vector of the object in a point in object space #pt.
 	 * The normal returned doesn't have to be normalized.
 	 * \pre #v is close to the surface of the object.
 	 */

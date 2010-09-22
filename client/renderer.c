@@ -25,11 +25,16 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
 	float distance = kd_tree_ray_intersection(&(s->tree), r, 0, INFINITY, &obj);
 
 	if(isnan(distance)){
-		// If the ray didn't hit anything, the ray stays black.
+		// If the ray didn't hit anything, it stays black.
 		return;
 	}
 
-	p->energy = 1;
+	vector_t point = vector_add(r->origin, vector_multiply(r->direction, distance));
+	vector_t normal = obj->get_normal(obj, vector_transform(point, &(obj->invTransform)));
+
+	normal = vector_normalize(vector_transform_direction(normal, &(obj->transform)));
+
+	p->energy = fabsf(vector_dot(normal, r->direction));
 }
 
 /**

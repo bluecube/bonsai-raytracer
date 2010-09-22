@@ -10,6 +10,7 @@
  * \note This function only fills invTransform.
  */
 void object_init(struct object *o, const struct transform *t){
+	o->transform = *t;
 	transform_invert(t, &(o->invTransform));
 }
 

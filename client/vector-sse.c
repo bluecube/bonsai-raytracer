@@ -9,6 +9,7 @@
 
 /**
  * Transform a point with a transformation.
+ * \todo This should be a inline calling vector_transform_direction.
  */
 vector_t vector_transform(vector_t v, const struct transform *t){
 	vector_t ret;
