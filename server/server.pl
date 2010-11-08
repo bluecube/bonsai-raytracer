@@ -18,7 +18,7 @@ use SharedDefs;
 
 use constant ID_STRING => "Bonsai raytracer server v0.1";
 
-use constant DEFAULT_CHUNKSIZE => 500000;
+use constant DEFAULT_CHUNKSIZE => 14;
 use constant DEFAULT_CHUNKTIMEOUT => 60 * 20;
 use constant DEFAULT_RESOLUTION => 800;
 use constant DEFAULT_EXTENSION => '.hdr';
@@ -179,7 +179,8 @@ sub loadScene(){
 
 	my $count = 0;
 
-	my $chunkRows = max(1, int($chunkSize / ($raysPerPx * $width)));
+	my $chunkRays = int exp($chunkSize);
+	my $chunkRows = min($height, max(1, int($chunkRays / ($raysPerPx * $width))));
 	for(my $y = 0; $y < $height; $y += $chunkRows){
 		my $len = min($chunkRows, $height - $y);
 
@@ -294,8 +295,8 @@ Usage:
 OPTIONS:
 	--chunksize=NUMBER
 		Granularity of the rendering.
-		Roughly how many primary rays will be traced in one chunk.
-		Default value is $chunkSize rays.
+		Natural logarithm of how many primary rays will be traced in one chunk.
+		Default value is $chunkSize.
 	--help
 		This help.
 	--output=FILE
