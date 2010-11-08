@@ -5,7 +5,7 @@
 /**
  * Return val if it is inside the closed interval or NAN if it isn't.
  */
-static float inside_interval(float val, float lowerBound, float upperBound){
+float inside_interval(float val, float lowerBound, float upperBound){
 	return (val >= lowerBound && val <= upperBound) ? val : NAN;
 }
 

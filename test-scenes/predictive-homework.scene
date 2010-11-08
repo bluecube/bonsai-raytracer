@@ -1,0 +1,19 @@
+{
+	"camera": {
+		"raysPerPx": 100,
+		"position": [0, 5, 1],
+		"lookAt": [0, 0, 0]
+	},
+	"objects": [
+		{
+			"type": "sphere",
+			"r": 1,
+			"center": [0, 0, 1]
+		},
+		{
+			"type": "sphere",
+			"r": 1,
+			"center": [0, 0, 3]
+		}
+	]
+}

@@ -43,13 +43,64 @@ my %objectTypes = (
 		my $center = [0, 0, 0];
 		$center = $_->{'center'} if defined($_->{'center'});
 
-		push @$center, 0;
+		push @$center, 1;
 
-		Math::MatrixReal->new_from_rows( [
-				[$r, 0, 0, 0],
-				[0, $r, 0, 0],
-				[0, 0, $r, 0],
-				$center
+		Math::MatrixReal->new_from_rows([
+			[$r, 0, 0, 0],
+			[0, $r, 0, 0],
+			[0, 0, $r, 0],
+			$center
+			]);
+	},
+
+	plane => sub{
+		my $normal = [0, 0, 1];
+		$normal = $_->{'normal'} if defined($_->{'normal'});
+		push @$normal, 0;
+		$normal = Math::MatrixReal->new_from_rows([$normal]);
+		my $len = (~$normal)->length();
+		die "Plane normal vector can't be zero" if $len == 0;
+		$normal /= $len;
+
+		#now we need to select the first two rows of the matrix.
+		#these will be mapped to vectors (1, 0, 0) and (0, 1, 0) on the
+		#plane in object space.
+		#the first vector is obtained by taking (1, 0, 0) and projecting it onto
+		#the plane. If the normal is too close to (1, 0, 0), then (0, 0, 1) is
+		#taken instead
+		#the second vector is taken as a cross product between the first vector
+		#and the normal.
+		#third row of the matrix is the plane normal and fourth is the translation
+		#of the origin
+
+		my $basex = Math::MatrixReal->new_from_rows([[1, 0, 0, 0]]);
+		my $dotProduct = (~$normal)->scalar_product(~$basex);
+		if(abs($dotProduct) > cos(PI / 6)){ # this constant is pertty much arbitrary. I only need the base vector reasonably far from the normal vector.
+			$basex = Math::MatrixReal->new_from_rows([[0, 0, 1, 0]]);
+			$dotProduct = (~$normal)->scalar_product(~$basex);
+		}
+		$basex -= $dotProduct * $normal; #this is the projection
+
+		# normalize the projected vector
+		$basex /= (~$basex)->length();
+
+		# ugly vector product because Math::MatrixReal doesn't like our homogenized vectors
+		my $basey = Math::MatrixReal->new_from_rows([[
+			$basex->element(1, 2) * $normal->element(1, 3) - $basex->element(1, 3) * $normal->element(1, 2),
+			$basex->element(1, 3) * $normal->element(1, 1) - $basex->element(1, 1) * $normal->element(1, 3),
+			$basex->element(1, 1) * $normal->element(1, 2) - $basex->element(1, 2) * $normal->element(1, 1),
+			0
+			]]);
+
+		my $point = [0, 0, 0];
+		$point = $_->{'point'} if defined($_->{'point'});
+		push @$point, 1;
+
+		Math::MatrixReal->new_from_rows([
+			$basex,
+			$basey,
+			$normal,
+			$point
 			]);
 	},
 

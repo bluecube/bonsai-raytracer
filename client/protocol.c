@@ -10,6 +10,7 @@
 
 /* Objects: */
 #include "sphere.h"
+#include "plane.h"
 
 /**
  * Print a printf-style formated error message and exit.
@@ -128,6 +129,8 @@ static void load_object(struct json_object *json, struct object *obj){
 	
 	if(!strcmp(type, "sphere")){
 		sphere_init(obj, &t);
+	}else if(!strcmp(type, "plane")){
+		plane_init(obj, &t);
 	}else{
 		warning(0, "Unknown object type \"%s\". Ignoring.", type);
 	}
