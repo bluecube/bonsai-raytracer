@@ -9,7 +9,7 @@
 #include "util.h"
 #include "vector.h"
 
-#define PLANE_NORMAL vector_set(0, 0, 1)
+#define PLANE_NORMAL vector_set(0, 1, 0)
 
 /**
  * Get the intersection point of the plane if it is in the interval

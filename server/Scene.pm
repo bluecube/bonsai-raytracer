@@ -20,6 +20,7 @@ use constant {
 use constant DEFAULT_ASPECT => DEFAULT_SENSOR_WIDTH / DEFAULT_SENSOR_HEIGHT;
 use constant DEFAULT_FOCAL_LENGTH => 50e-3;
 use constant DEFAULT_F_NUMBER => 4.0;
+use constant DEFAULT_FOCUS_DISTANCE => 200;
 
 # Default number of rays sent through each pixel.
 use constant DEFAULT_RAYS_PER_PX => 1e3;
@@ -54,19 +55,18 @@ my %objectTypes = (
 	},
 
 	plane => sub{
-		my $normal = [0, 0, 1];
+		my $normal = [0, 1, 0];
 		$normal = $_->{'normal'} if defined($_->{'normal'});
 		push @$normal, 0;
 		$normal = Math::MatrixReal->new_from_rows([$normal]);
-		my $len = (~$normal)->length();
+		my $len = vector_length($normal);
 		die "Plane normal vector can't be zero" if $len == 0;
 		$normal /= $len;
 
 		#now we need to select the first two rows of the matrix.
-		#these will be mapped to vectors (1, 0, 0) and (0, 1, 0) on the
-		#plane in object space.
+		#these will be mapped to vectors (1, 0, 0) and (0, 0, 1) in object space.
 		#the first vector is obtained by taking (1, 0, 0) and projecting it onto
-		#the plane. If the normal is too close to (1, 0, 0), then (0, 0, 1) is
+		#the plane. If the normal is too close to this vector, then (0, 0, 1) is
 		#taken instead
 		#the second vector is taken as a cross product between the first vector
 		#and the normal.
@@ -74,23 +74,17 @@ my %objectTypes = (
 		#of the origin
 
 		my $basex = Math::MatrixReal->new_from_rows([[1, 0, 0, 0]]);
-		my $dotProduct = (~$normal)->scalar_product(~$basex);
+		my $dotProduct = dot_product($normal, $basex);
 		if(abs($dotProduct) > cos(PI / 6)){ # this constant is pertty much arbitrary. I only need the base vector reasonably far from the normal vector.
 			$basex = Math::MatrixReal->new_from_rows([[0, 0, 1, 0]]);
-			$dotProduct = (~$normal)->scalar_product(~$basex);
+			$dotProduct = dot_product($normal, $basex);
 		}
 		$basex -= $dotProduct * $normal; #this is the projection
 
 		# normalize the projected vector
-		$basex /= (~$basex)->length();
+		$basex /= vector_length($basex);
 
-		# ugly vector product because Math::MatrixReal doesn't like our homogenized vectors
-		my $basey = Math::MatrixReal->new_from_rows([[
-			$basex->element(1, 2) * $normal->element(1, 3) - $basex->element(1, 3) * $normal->element(1, 2),
-			$basex->element(1, 3) * $normal->element(1, 1) - $basex->element(1, 1) * $normal->element(1, 3),
-			$basex->element(1, 1) * $normal->element(1, 2) - $basex->element(1, 2) * $normal->element(1, 1),
-			0
-			]]);
+		my $basey = vector_product($basex, $normal);
 
 		my $point = [0, 0, 0];
 		$point = $_->{'point'} if defined($_->{'point'});
@@ -145,6 +139,32 @@ sub readMatrix{
 	return $t;
 }
 
+# Vector product, working around some limitations of Math::MatrixReal
+sub vector_product{
+	my $a = shift;
+	my $b = shift;
+
+	Math::MatrixReal->new_from_rows([[
+			$a->element(1, 2) * $b->element(1, 3) - $a->element(1, 3) * $b->element(1, 2),
+			$a->element(1, 3) * $b->element(1, 1) - $a->element(1, 1) * $b->element(1, 3),
+			$a->element(1, 1) * $b->element(1, 2) - $a->element(1, 2) * $b->element(1, 1),
+			0
+			]]);
+}
+
+sub dot_product{
+	my $a = shift;
+	my $b = shift;
+
+	(~$a)->scalar_product(~$b);
+}
+
+sub vector_length{
+	my $a = shift;
+
+	(~$a)->length;
+}
+
 # process camera settings and normalize its dimensions.
 # The real sensor is always 1 unit wide and (1 / aspect) high.
 sub cameraSettings{
@@ -191,68 +211,75 @@ sub cameraSettings{
 
 	my $position;
 	if(defined($_->{'position'})){
-		$position = Math::MatrixReal->new_from_cols([$_->{'position'}]);
+		push @{$_->{'position'}}, 1;
+		$position = Math::MatrixReal->new_from_rows([$_->{'position'}]);
 		delete $_->{'position'};
 	}else{
-		$position = Math::MatrixReal->new_from_cols([[0, 0, 0]]);
+		$position = Math::MatrixReal->new_from_rows([[0, 0, 0, 1]]);
 	}
 
 	my $lookAt;
 	if(defined($_->{'lookAt'})){
-		$lookAt = Math::MatrixReal->new_from_cols([$_->{'lookAt'}]);
+		push @{$_->{'lookAt'}}, 1;
+		$lookAt = Math::MatrixReal->new_from_rows([$_->{'lookAt'}]);
 		delete $_->{'lookAt'};
 	}else{
-		$lookAt = Math::MatrixReal->new_from_cols([[0, 0, 500]]);
+		$lookAt = Math::MatrixReal->new_from_rows([[0, 0, DEFAULT_FOCUS_DISTANCE, 0]]);
 	}
 
 	my $upVector;
 	if(defined($_->{'upVector'})){
-		$upVector = Math::MatrixReal->new_from_cols([$_->{'upVector'}]);
+		push @{$_->{'upVector'}}, 0;
+		$upVector = Math::MatrixReal->new_from_rows([$_->{'upVector'}]);
 		delete $_->{'upVector'};
 	}else{
-		$upVector = Math::MatrixReal->new_from_cols([[0, 1, 0]]);
+		$upVector = Math::MatrixReal->new_from_rows([[0, 1, 0, 0]]);
 	}
 
+	#print "upVector:";
+	#print $upVector;
+	#print "lookAt:";
+	#print $lookAt;
+	#print "position:";
+	#print $position;
+
 	my $zAxis = $lookAt - $position;
-	$_->{'focus'} = $zAxis->length();
-	$zAxis /= $zAxis->length();
+	$_->{'focus'} = vector_length($zAxis);
+	$zAxis /= vector_length($zAxis);
+	#print "zaxis:";
+	#print $zAxis;
 
-	$upVector /= $upVector->length();
-	my $xAxis = $upVector->vector_product($zAxis);
-	$xAxis /= $xAxis->length();
+	my $xAxis = vector_product($upVector, $zAxis);
+	$xAxis /= vector_length($xAxis);
+	#print "xaxis:";
+	#print $xAxis;
 
-	my $yAxis = $zAxis->vector_product($xAxis);
+	my $yAxis = vector_product($zAxis, $xAxis);
+	#print "yaxis:";
+	#print $yAxis;
 
-	# Matrix to add one dimension to the vectors
-	my $tmpMatrix = Math::MatrixReal->new_from_cols([
-		[1, 0, 0, 0],
-		[0, 1, 0, 0],
-		[0, 0, 1, 0]]);
+	my $matrix = Math::MatrixReal->new_from_rows([
+		$xAxis,
+		$yAxis,
+		$zAxis,
+		$position]);
 
-	# Rotations matrix:
-	my $matrix = Math::MatrixReal->new_from_cols([
-		$tmpMatrix * $xAxis,
-		$tmpMatrix * $yAxis,
-		$tmpMatrix * $zAxis,
-		[0, 0, 0, 1]]);
-
-	$position = -~($tmpMatrix * $position);
-	
-	$matrix->assign_row(4, $position);
-	$matrix->assign(4, 4, 1);
-
-	$_->{'inverse_transform'} = $matrix->inverse();
+	#print "\ncamera inverse transform:\n";
+	#print $matrix;
+	$_->{'transform'} = $matrix->inverse();
 }
 
 sub objects{
+	my $cameraTransform = shift;
 	$_->{'objects'} = [] unless defined($_->{'objects'}) &&
 		(ref($_->{'objects'}) eq 'ARRAY');
 	local $_ = $_->{'objects'};
 
-	object() for (@$_);
+	object($cameraTransform) for (@$_);
 }
 
 sub object{
+	my $cameraTransform = shift;
 	my $type = $_->{'type'};
 	
 	die("Object type must be specified") unless defined $type;
@@ -270,6 +297,11 @@ sub object{
 	if($newTransform){
 		$transform = $newTransform * $transform;
 	}
+
+	#print "\n$type transform:\n";
+	#print $transform;
+
+	$transform *= $cameraTransform;
 	
 	$_->{'transform'} = writeMatrix($transform);
 }
@@ -288,9 +320,9 @@ sub load{
 	close $fh;
 
 	cameraSettings();
-	objects();
+	objects($_->{'camera'}->{'transform'});
 
-	delete $_->{'camera'}->{'inverse_transform'};
+	delete $_->{'camera'}->{'transform'};
 	$_;
 }
 

@@ -51,11 +51,13 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	// How many meters per pixel.
 	float inc = s->sensorWidth / (float)(s->width - 1);
 
-	float yy = inc * (chunk->top - (float)(s->height) / 2);
+	float yy = inc * ((float)(s->height) / 2 - chunk->top);
 
 	float focus = s->focus / s->focalLength;
 
+#if MEASUREMENTS_WITH_WARMUP
 	MEASUREMENTS_WARMUP();
+#endif
 	MEASUREMENTS_START();
 
 	for(unsigned y = chunk->top; y < ymax; ++y){
@@ -100,7 +102,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 
 			xx += inc;
 		}
-		yy += inc;
+		yy -= inc;
 	}
 
 	MEASUREMENTS_PRINT();
