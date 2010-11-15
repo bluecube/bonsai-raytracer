@@ -9,8 +9,8 @@
 #include "transform.h"
 
 /* Objects: */
-#include "sphere.h"
-#include "plane.h"
+#include "objects/sphere.h"
+#include "objects/plane.h"
 
 /**
  * Print a printf-style formated error message and exit.

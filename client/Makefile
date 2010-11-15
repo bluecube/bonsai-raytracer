@@ -1,4 +1,5 @@
 CFILES = $(wildcard *.c)
+CFILES += $(wildcard objects/*.c)
 OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
 PROG = bonsai-client

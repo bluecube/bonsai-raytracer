@@ -4,7 +4,7 @@
  * \see /doc/sphere.wxm for the calculations.
  */
 
-#include "sphere.h"
+#include "objects/sphere.h"
 
 #include "polynomial.h"
 #include "util.h"

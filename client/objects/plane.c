@@ -3,7 +3,7 @@
  * Implementation of a infinite plane object.
  */
 
-#include "plane.h"
+#include "objects/plane.h"
 
 #include "polynomial.h"
 #include "util.h"

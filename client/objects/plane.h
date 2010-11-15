@@ -1,5 +1,5 @@
-#ifndef BONSAI_CLIENT_PLANE_H
-#define BONSAI_CLIENT_PLANE_H
+#ifndef BONSAI_CLIENT_OBJECTS_PLANE_H
+#define BONSAI_CLIENT_OBJECTS_PLANE_H
 
 #include "object.h"
 
