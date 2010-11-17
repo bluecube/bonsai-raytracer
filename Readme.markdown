@@ -7,9 +7,7 @@ other projects. It should render to HDR, be photorealistic and
 
 I also use a few parts of it as school projects.
 
-You don’t want to use it (yet).
-The code is full of bugs, server is crap and it does only trivial shading
-(everything is either completely black or completely white).
+You don’t want to use it (yet). The code is full of bugs and the server is crap.
 ... but one day it will become the coolest and greatest (and fastest)
 renderer around.
 Or maybe not.
