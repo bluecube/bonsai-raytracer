@@ -13,7 +13,7 @@ override LDFLAGS += $(shell pkg-config --libs json)
 override CFLAGS += $(shell pkg-config --cflags json)
 
 # debug flag
-DEBUG=1
+DEBUG=0
 ifneq ($(DEBUG),1)
   $(info Compiling in optimized mode)
   override CFLAGS += -O3 -DNDEBUG
