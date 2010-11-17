@@ -73,7 +73,7 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
  */
 void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	struct color *pixmap){
-	int ymax = chunk->top + chunk->height;
+	unsigned ymax = chunk->top + chunk->height;
 
 	// How many meters per pixel.
 	float inc = s->sensorWidth / (float)(s->width - 1);

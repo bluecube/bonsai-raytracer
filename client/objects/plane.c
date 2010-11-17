@@ -20,6 +20,8 @@
 float get_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound){
 
+	(void)o;
+
 	return inside_interval(- r->origin.z * r->invDirection.z, lowerBound, upperBound);
 }
 
@@ -27,7 +29,10 @@ float get_intersection(struct object *o, const struct ray *r,
  * Get the normal vector of the object in a point #v.
  * \pre #v is close to the surface of the object.
  */
-static vector_t get_normal(struct object *sphere, vector_t pt){
+static vector_t get_normal(struct object *o, vector_t pt){
+	(void)o;
+	(void)pt;
+
 	return PLANE_NORMAL;
 }
 
