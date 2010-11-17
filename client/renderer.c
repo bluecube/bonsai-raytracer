@@ -9,16 +9,21 @@
 #include "ray.h"
 #include "photon.h"
 
+#define MAX_DEPTH 16
+
 /**
  * Render a single ray from a camera.
  * \param s Scene to render.
  * \param r Ray being cast.
- * \param[in,out] Wavelength of the ray.
- * The w->wavelength is an input, and w->value is returned.
- * \todo Most of the rendering work should be here.
- * Now there is only a trivial shading used here.
+ * \param wavelength
+ * \param depth How deep are we in the recursion?
+ * \return Energy of the ray.
  */
-static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
+static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavelength, int depth){
+	if(depth > MAX_DEPTH){
+		return 0;
+	}
+
 	struct object *obj;
 
 	MEASUREMENTS_RAY_SCENE_INTERSECTION();
@@ -26,15 +31,37 @@ static void render_ray(const struct scene *s, struct ray *r, struct photon *p){
 
 	if(isnan(distance)){
 		// If the ray didn't hit anything, it stays black.
-		return;
+		return 0;
 	}
 
 	vector_t point = vector_add(r->origin, vector_multiply(r->direction, distance));
 	vector_t normal = obj->get_normal(obj, vector_transform(point, &(obj->invTransform)));
-
 	normal = vector_normalize(vector_transform_direction(normal, &(obj->transform)));
 
-	p->energy = fabsf(vector_dot(normal, r->direction));
+	float energy = 0;
+
+	if(object_is_light_source(obj)){
+		energy = (obj->light.energy)(point, wavelength, normal, r->direction);
+	}
+
+	// chose an outgoing direction of the bounce
+	/// \todo Rewrite this.
+	vector_t outDirection;
+	float cosine;
+	do{
+		outDirection = vector_random_on_sphere();
+		cosine = vector_dot(normal, outDirection);
+	}while(vector_dot(normal, outDirection) < 0);
+
+	float coef = (obj->surface.brdf)(point, wavelength, normal, r->direction, outDirection);
+	coef *= cosine;
+
+	struct ray newRay;
+	ray_from_direction(&newRay, point, outDirection);
+
+	energy += coef * render_ray(s, &newRay, wavelength, depth + 1);
+
+	return energy;
 }
 
 /**
@@ -87,7 +114,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				struct photon p;
 				photon_random_init(&p);
 
-				render_ray(s, &r, &p);
+				p.energy = render_ray(s, &r, p.wavelength, 0);
 				
 				photon_add_to_color(&p, pixmap);
 #else
@@ -98,6 +125,9 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				pixmap->g += measurementsTreeTraversalCounter;
 #endif
 			}
+			color_scale(pixmap, 1.0f / s->raysPerPx);
+
+			//printf("x = %i y = %i pixmap->r = %.2f\n", x, y ,pixmap->r);
 			++pixmap;
 
 			xx += inc;

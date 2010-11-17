@@ -1,5 +1,7 @@
 CFILES = $(wildcard *.c)
 CFILES += $(wildcard objects/*.c)
+CFILES += $(wildcard surfaces/*.c)
+CFILES += $(wildcard lights/*.c)
 OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
 PROG = bonsai-client

@@ -5,20 +5,13 @@
 #include "random.h"
 
 /**
- * Using this definition enforces at least some check on the correctness of the
- * PHOTON_MIN_WAVELENGTH and PHOTON_MAX_WAVELENGTH macro values.
- */
-#define TBL_SIZE \
-	(PHOTON_MAX_WAVELENGTH - PHOTON_MIN_WAVELENGTH)
-
-/**
  * The tristimulus curves.
  * Represented as series of triplets for the X, Y, and Z responses
  * from 375nm to 800nm at 1nm intervals.
  * \note This is taken from the galileo renderer.
  * http://galileorenderer.svn.sourceforge.net/viewvc/galileorenderer/trunk/galileo/src/utilities/tristimulus_curves.h?revision=4
  */
-static float const tristimulusCurves[TBL_SIZE][3] = {
+static float const tristimulusCurves[PHOTON_WAVELENGTH_COUNT][3] = {
 	{ 0.00003f, 0.00000f, 0.00013f }, { 0.00023f, 0.00000f, 0.00107f },
 	{ 0.00056f, 0.00000f, 0.00259f }, { 0.00094f, 0.00000f, 0.00432f },
 	{ 0.00127f, 0.00000f, 0.00589f }, { 0.00150f, 0.00001f, 0.00698f },

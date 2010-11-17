@@ -7,7 +7,7 @@
 
 /**
  * Initialize an object.
- * \note This function only fills invTransform.
+ * Fills transformation and its inverse.
  */
 void object_init(struct object *o, const struct transform *t){
 	o->transform = *t;

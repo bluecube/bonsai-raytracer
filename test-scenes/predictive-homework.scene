@@ -1,6 +1,6 @@
 {
 	"camera": {
-		"raysPerPx": 100,
+		"raysPerPx": 50000,
 		"position": [0, 2, -5],
 		"lookAt": [0, 1.5, 0],
 		"focalLength": 30e-3
@@ -9,16 +9,21 @@
 		{
 			"type": "sphere",
 			"r": 0.5,
-			"center": [0, 0.5, 0]
+			"center": [0, 1.5, 0],
+			"surface": "difuse_white",
+			"light": "difuse_white"
+
 		},
 		{
 			"type": "sphere",
 			"r": 0.5,
-			"center": [0, 1.5, 0]
+			"center": [0, 0.5, 0],
+			"surface": "difuse_white"
 		},
 		{
 			"type": "plane",
-			"normal": [0, 1, 0]
+			"normal": [0, 1, 0],
+			"surface": "difuse_white"
 		}
 	]
 }

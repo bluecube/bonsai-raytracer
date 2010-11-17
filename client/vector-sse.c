@@ -71,4 +71,29 @@ vector_t vector_random_in_circle(float r){
 	return ret;
 }
 
+/**
+ * Get a random point uniformly distributed on a unit sphere.
+ */
+vector_t vector_random_on_sphere(){
+	float x, y, z, len;
+	do{
+		x = random_number(-1, 1);
+		y = random_number(-1, 1);
+		z = random_number(-1, 1);
+
+		len = x * x + y * y + z * z;
+	}while(len > 1);
+
+	x /= len;
+	y /= len;
+	z /= len;
+
+	return vector_set(x, y, z);
+}
+
 #endif
+
+/** 
+ * \function vector_random_on_sphere
+ * \todo Vectorize this.
+ */

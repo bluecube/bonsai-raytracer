@@ -304,6 +304,17 @@ sub object{
 	$transform *= $cameraTransform;
 	
 	$_->{'transform'} = writeMatrix($transform);
+
+
+	# surface
+	if(!defined($_->{'surface'})){
+		$_->{'surface'} = "difuse_white";
+	}
+
+	# light
+	if(!defined($_->{'light'})){
+		$_->{'light'} = "none";
+	}
 }
 
 

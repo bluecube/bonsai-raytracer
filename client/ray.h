@@ -21,6 +21,7 @@ float ray_transform(const struct ray *r, const struct transform *t,
 	struct ray *ret);
 
 void ray_from_points(struct ray *r, vector_t origin, vector_t point);
+void ray_from_direction(struct ray *r, vector_t origin, vector_t dir);
 
 
 #endif

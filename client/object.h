@@ -1,11 +1,15 @@
 #ifndef BONSAI_CLIENT_OBJECT_H
 #define BONSAI_CLIENT_OBJECT_H
 
-#include "bounding_box.h"
-#include "ray.h"
-#include "transform.h"
+#include <stdbool.h>
+#include <stdlib.h>
 
-#define OBJECT_CUSTOM_FLOAT_COUNT 4
+#include "bounding_box.h"
+#include "light.h"
+#include "ray.h"
+#include "surface.h"
+
+#include "transform.h"
 
 /**
  * Geometric object with a surface.
@@ -21,6 +25,7 @@ struct object{
 
 	/**
 	 * Transformation from object coordinates to world coordinates.
+	 * \todo Is it necessary to store this?
 	 */
 	struct transform transform;
 
@@ -45,6 +50,10 @@ struct object{
 	 * \pre #v is close to the surface of the object.
 	 */
 	vector_t (*get_normal)(struct object *o, vector_t pt);
+
+
+	struct surface surface;
+	struct light light;
 } __attribute__ ((aligned (16)));
 
 /**
@@ -63,5 +72,9 @@ void object_destroy(struct object *o);
 
 float object_ray_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound);
+
+static inline bool object_is_light_source(const struct object *o){
+	return o->light.energy != NULL;
+}
 
 #endif

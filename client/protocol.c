@@ -5,12 +5,15 @@
 
 #include "kd_tree.h"
 #include "object.h"
-#include "shared_defs.h"
-#include "transform.h"
-
-/* Objects: */
 #include "objects/sphere.h"
 #include "objects/plane.h"
+#include "shared_defs.h"
+#include "surface.h"
+#include "surfaces/difuse_white.h"
+#include "light.h"
+#include "lights/difuse_white_light.h"
+#include "transform.h"
+
 
 /**
  * Print a printf-style formated error message and exit.
@@ -117,6 +120,43 @@ static void load_transformation(struct json_object *obj, struct transform *t){
 }
 
 /**
+ * Load surface settings for an object.
+ */
+static void load_surface(struct json_object *json, struct object *obj){
+	const char *surface = load_string(j_o_o_g(json, "surface"));
+
+	if(!strcmp(surface, "difuse_white")){
+		difuse_white_init(obj);
+	}else{
+		warning(0, "Unknown surface \"%s\". Ignoring.", surface);
+		difuse_white_init(obj);
+	}
+}
+
+/**
+ * Load light source settings for an object.
+ */
+static void load_light(struct json_object *json, struct object *obj){
+	struct json_object *lightObject = j_o_o_g(json, "light");
+
+	if(!lightObject){
+		no_light_init(obj);
+	}
+
+	const char *light = load_string(lightObject);
+
+	if(!strcmp(light, "none")){
+		no_light_init(obj);
+	}else if(!strcmp(light, "difuse_white")){
+		difuse_white_light_init(obj);
+	}else{
+		warning(0, "Unknown light \"%s\". Ignoring.", light);
+		no_light_init(obj);
+	}
+	
+}
+
+/**
  * Load an object from its JSON representation.
  * \return true if the object was succesfuly loaded.
  */
@@ -134,6 +174,9 @@ static void load_object(struct json_object *json, struct object *obj){
 	}else{
 		warning(0, "Unknown object type \"%s\". Ignoring.", type);
 	}
+
+	load_surface(json, obj);
+	load_light(json, obj);
 }
 
 /**
