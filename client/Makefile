@@ -6,7 +6,7 @@ OFILES = $(CFILES:.c=.o)
 DEPFILES = $(CFILES:.c=.d)
 PROG = bonsai-client
 
-override CFLAGS += -Wall -Wextra -std=gnu99 -D_ISOC99_SOURCE -march=native
+override CFLAGS += -Wall -Wextra -std=gnu99 -D_ISOC99_SOURCE -march=native -I.
 override LDFLAGS += -Wall -Wextra -lm
 
 override LDFLAGS += $(shell pkg-config --libs json)
