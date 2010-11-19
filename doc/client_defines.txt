@@ -15,3 +15,5 @@ MEASUREMENTS_WITH_WARMUP
 DISABLE_SSE
 	Disable all the code with SSE intrinsics. The result will be slower but
 	more portable.
+DOT_PRODUCT_SHADING
+	Disable path tracing and only do dot product shading.

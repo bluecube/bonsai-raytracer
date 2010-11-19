@@ -38,6 +38,9 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 	vector_t normal = obj->get_normal(obj, vector_transform(point, &(obj->invTransform)));
 	normal = vector_normalize(vector_transform_direction(normal, &(obj->transform)));
 
+#if DOT_PRODUCT_SHADING
+	return fabsf(vector_dot(normal, r->direction));
+#else
 	float energy = 0;
 
 	if(object_is_light_source(obj)){
@@ -62,6 +65,7 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 	energy += coef * render_ray(s, &newRay, wavelength, depth + 1);
 
 	return energy;
+#endif
 }
 
 /**
