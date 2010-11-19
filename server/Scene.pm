@@ -84,7 +84,7 @@ my %objectTypes = (
 		# normalize the projected vector
 		$basex /= vector_length($basex);
 
-		my $basey = vector_product($basex, $normal);
+		my $basez = vector_product($basex, $normal);
 
 		my $point = [0, 0, 0];
 		$point = $_->{'point'} if defined($_->{'point'});
@@ -92,8 +92,8 @@ my %objectTypes = (
 
 		Math::MatrixReal->new_from_rows([
 			$basex,
-			$basey,
 			$normal,
+			$basez,
 			$point
 			]);
 	},

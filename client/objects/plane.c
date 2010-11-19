@@ -22,7 +22,7 @@ float get_intersection(struct object *o, const struct ray *r,
 
 	(void)o;
 
-	return inside_interval(- r->origin.z * r->invDirection.z, lowerBound, upperBound);
+	return inside_interval(- r->origin.y * r->invDirection.y, lowerBound, upperBound);
 }
 
 /**
