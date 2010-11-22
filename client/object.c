@@ -8,6 +8,8 @@
 /**
  * Initialize an object.
  * Fills transformation and its inverse.
+ * \param t Transformation from object space
+ * to the camera space.
  */
 void object_init(struct object *o, const struct transform *t){
 	o->transform = *t;

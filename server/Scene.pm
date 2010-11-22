@@ -18,7 +18,7 @@ use constant {
 	DEFAULT_SENSOR_HEIGHT => 24e-3,
 };
 use constant DEFAULT_ASPECT => DEFAULT_SENSOR_WIDTH / DEFAULT_SENSOR_HEIGHT;
-use constant DEFAULT_FOCAL_LENGTH => 50e-3;
+use constant DEFAULT_FOCAL_LENGTH => 80e-3;
 use constant DEFAULT_F_NUMBER => 4.0;
 use constant DEFAULT_FOCUS_DISTANCE => 200;
 
@@ -224,7 +224,7 @@ sub cameraSettings{
 		$lookAt = Math::MatrixReal->new_from_rows([$_->{'lookAt'}]);
 		delete $_->{'lookAt'};
 	}else{
-		$lookAt = Math::MatrixReal->new_from_rows([[0, 0, DEFAULT_FOCUS_DISTANCE, 0]]);
+		$lookAt = $position + Math::MatrixReal->new_from_rows([[0, 0, DEFAULT_FOCUS_DISTANCE, 0]]);
 	}
 
 	my $upVector;
@@ -264,8 +264,10 @@ sub cameraSettings{
 		$zAxis,
 		$position]);
 
-	#print "\ncamera inverse transform:\n";
+	#print "\ncamera transform:\n";
 	#print $matrix;
+	#print "\ncamera inverse transform:\n";
+	#print $matrix->inverse();
 	$_->{'transform'} = $matrix->inverse();
 }
 
@@ -295,14 +297,14 @@ sub object{
 	#print "Object: $type\n";
 	
 	if($newTransform){
-		$transform = $newTransform * $transform;
+		$transform = $transform * $newTransform;
 	}
 
+	$transform = $transform * $cameraTransform;
+	
 	#print "\n$type transform:\n";
 	#print $transform;
 
-	$transform *= $cameraTransform;
-	
 	$_->{'transform'} = writeMatrix($transform);
 
 

@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <assert.h>
 #include <math.h>
 
 #include "kd_tree.h"
@@ -35,11 +36,15 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 	}
 
 	vector_t point = vector_add(r->origin, vector_multiply(r->direction, distance));
-	vector_t normal = obj->get_normal(obj, vector_transform(point, &(obj->invTransform)));
+	point = vector_transform(point, &(obj->invTransform));
+	vector_t normal = obj->get_normal(obj, point);
 	normal = vector_normalize(vector_transform_direction(normal, &(obj->transform)));
 
 #if DOT_PRODUCT_SHADING
-	return fabsf(vector_dot(normal, r->direction));
+	float dot = -vector_dot(normal, r->direction);
+	if(dot < 0)
+		return 0;
+	return dot;
 #else
 	float energy = 0;
 
@@ -119,7 +124,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				photon_random_init(&p);
 
 				p.energy = render_ray(s, &r, p.wavelength, 0);
-				
+
 				photon_add_to_color(&p, pixmap);
 #else
 				struct object *obj;
