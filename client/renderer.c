@@ -25,7 +25,7 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 		return 0;
 	}
 
-	struct object *obj;
+	struct object *obj = NULL;
 
 	MEASUREMENTS_RAY_SCENE_INTERSECTION();
 	float distance = kd_tree_ray_intersection(&(s->tree), r, 0, INFINITY, &obj);
@@ -35,21 +35,23 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 		return 0;
 	}
 
-	vector_t point = vector_add(r->origin, vector_multiply(r->direction, distance));
-	point = vector_transform(point, &(obj->invTransform));
-	vector_t normal = obj->get_normal(obj, point);
-	normal = vector_normalize(vector_transform_direction(normal, &(obj->transform)));
+	vector_t pointInCameraSpace = vector_add(r->origin, vector_multiply(r->direction, distance));
+	vector_t pointInObjectSpace = vector_transform(pointInCameraSpace, &(obj->invTransform));
+	vector_t normalInObjectSpace = obj->get_normal(obj, pointInObjectSpace);
+	vector_t normalInCameraSpace = vector_normalize(vector_transform_direction(normalInObjectSpace, &(obj->transform)));
 
 #if DOT_PRODUCT_SHADING
-	float dot = -vector_dot(normal, r->direction);
+	float dot = -vector_dot(normalInCameraSpace, r->direction);
 	if(dot < 0)
 		return 0;
 	return dot;
 #else
 	float energy = 0;
 
+	/// \todo Surface properties shouldn't be in camera space.
+
 	if(object_is_light_source(obj)){
-		energy = (obj->light.energy)(point, wavelength, normal, r->direction);
+		energy = (obj->light.energy)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction);
 	}
 
 	// chose an outgoing direction of the bounce
@@ -58,14 +60,14 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 	float cosine;
 	do{
 		outDirection = vector_random_on_sphere();
-		cosine = vector_dot(normal, outDirection);
-	}while(vector_dot(normal, outDirection) < 0);
+		cosine = vector_dot(normalInCameraSpace, outDirection);
+	}while(cosine < 0);
 
-	float coef = (obj->surface.brdf)(point, wavelength, normal, r->direction, outDirection);
+	float coef = (obj->surface.brdf)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction, outDirection);
 	coef *= cosine;
 
 	struct ray newRay;
-	ray_from_direction(&newRay, point, outDirection);
+	ray_from_direction(&newRay, pointInCameraSpace, outDirection);
 
 	energy += coef * render_ray(s, &newRay, wavelength, depth + 1);
 

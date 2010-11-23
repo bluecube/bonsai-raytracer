@@ -32,7 +32,6 @@ static float det_3x3_top_left(const struct transform *t){
  * No checks are done.
  */
 static float det_2x2(const struct transform *t, int row1, int col1, int row2, int col2){
-	printf("a%i%i * a%i%i - a%i%i * a%i%i\n", row1, col1, row2, col2, row1, col2, row2, col1);
 	return
 		t->row[row1].f[col1] * t->row[row2].f[col2] -
 		t->row[row1].f[col2] * t->row[row2].f[col1];
@@ -89,7 +88,7 @@ void transform_invert(const struct transform *t, struct transform *ret){
 void transform_identity(struct transform *t){
 	memset(t, 0, sizeof(struct transform));
 
-	for(int i = 0; i < 4; ++i){
+	for(int i = 0; i < 3; ++i){
 		t->row[i].f[i] = 1;
 	}
 }
