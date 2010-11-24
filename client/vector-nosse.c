@@ -113,9 +113,9 @@ vector_t vector_random_in_circle(float r){
 	float x, y;
 
 	do{
-		x = random_number(-r, r);
-		y = random_number(-r, r);
-	}while(x * x + y * y > r * r);
+		x = random_number(-1, 1);
+		y = random_number(-1, 1);
+	}while(x * x + y * y > 1);
 
 	return vector_set(x, y, 0);
 }

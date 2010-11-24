@@ -37,7 +37,7 @@ static inline vector_t vector_set_normalized(float x, float y, float z);
 vector_t vector_transform(vector_t v, const struct transform *t);
 vector_t vector_transform_direction(vector_t v, const struct transform *t);
 
-vector_t vector_random_in_circle(float r);
+vector_t vector_random_in_circle();
 vector_t vector_random_on_sphere();
 
 /**

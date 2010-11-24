@@ -51,9 +51,9 @@ vector_t vector_transform_direction(vector_t v, const struct transform *t){
 
 /**
  * Get a random point inside a circle using rejection sampling.
- * The circle lies in the Z plane and has radius r.
+ * The circle lies in the Z plane and has radius 1.
  */
-vector_t vector_random_in_circle(float r){
+vector_t vector_random_in_circle(){
 	__m128 coords;
 	__m128 dist;
 	do{
@@ -63,10 +63,8 @@ vector_t vector_random_in_circle(float r){
 		dist = _mm_add_ss(dist, _mm_movehl_ps(dist, dist));
 	}while(_mm_comige_ss(dist, _mm_set_ss(1)));
 
-	coords = _mm_shuffle_ps(coords, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 2, 0));
-
 	vector_t ret;
-	ret.m = _mm_mul_ps(coords, _mm_set1_ps(r));
+	ret.m = _mm_shuffle_ps(coords, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 2, 0));
 
 	return ret;
 }

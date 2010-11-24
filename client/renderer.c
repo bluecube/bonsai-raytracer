@@ -117,7 +117,7 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 					focus * (yy + random_number(0, inc)),
 					s->focus);
 
-				vector_t lensPoint = vector_random_in_circle(s->apertureDiameter);
+				vector_t lensPoint = vector_multiply(vector_random_in_circle(), s->apertureDiameter);
 
 				ray_from_points(&r, lensPoint, focusPoint);
 
