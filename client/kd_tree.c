@@ -89,11 +89,25 @@ static void object_list_build(struct object_list *l, struct wrapped_object *obje
 }
 
 /**
+ * Initialize an empty tree.
+ */
+void kd_tree_init(struct kd_tree *tree){
+	tree->nodes = NULL;
+	tree->objects = NULL;
+}
+
+/**
  * Free all memory used by the nodes of a KD-tree.
  */
 void kd_tree_destroy(struct kd_tree *tree){
-	free(tree->nodes);
-	free(tree->objects);
+	if(tree->nodes){
+		free(tree->nodes);
+		tree->nodes = NULL;
+	}
+	if(tree->objects){
+		free(tree->objects);
+		tree->objects = NULL;
+	}
 }
 
 /**

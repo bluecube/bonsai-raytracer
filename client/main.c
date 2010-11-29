@@ -75,6 +75,7 @@ printf("Rendering chunk.\n");
 			break;
 		case MSG_TYPE_FINISHED:
 printf("Finishing\n");
+			scene_empty(&s);
 			keepRunning = false;
 			break;
 		}

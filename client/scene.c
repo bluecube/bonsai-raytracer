@@ -15,8 +15,7 @@ void scene_init(struct scene *s){
 
 	s->width = s->height = 0;
 
-	s->tree.nodes = NULL;
-	s->tree.objects = NULL;
+	kd_tree_init(&(s->tree));
 }
 
 /**

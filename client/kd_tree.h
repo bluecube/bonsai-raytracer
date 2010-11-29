@@ -75,6 +75,7 @@ struct kd_tree{
 	struct object *objects;
 };
 
+void kd_tree_init(struct kd_tree *t);
 void kd_tree_destroy(struct kd_tree *t);
 
 float kd_tree_ray_intersection(const struct kd_tree *tree,
