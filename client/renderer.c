@@ -6,9 +6,10 @@
 #include "kd_tree.h"
 #include "measurements.h"
 #include "object.h"
+#include "photon.h"
 #include "random.h"
 #include "ray.h"
-#include "photon.h"
+#include "surface.h"
 
 #define MAX_DEPTH 16
 
@@ -54,22 +55,13 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 		energy = (obj->light.energy)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction);
 	}
 
-	// chose an outgoing direction of the bounce
-	/// \todo Rewrite this.
-	vector_t outDirection;
-	float cosine;
-	do{
-		outDirection = vector_random_on_sphere();
-		cosine = vector_dot(normalInCameraSpace, outDirection);
-	}while(cosine < 0);
-
-	float coef = (obj->surface.brdf)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction, outDirection);
-	coef *= cosine;
+	struct outgoing_direction sample =
+		(obj->surface.sample)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction);
 
 	struct ray newRay;
-	ray_from_direction(&newRay, pointInCameraSpace, outDirection);
+	ray_from_direction(&newRay, pointInCameraSpace, sample.direction);
 
-	energy += coef * render_ray(s, &newRay, wavelength, depth + 1);
+	energy += sample.weight * render_ray(s, &newRay, wavelength, depth + 1);
 
 	return energy;
 #endif

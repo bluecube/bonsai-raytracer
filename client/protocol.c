@@ -9,7 +9,7 @@
 #include "objects/plane.h"
 #include "shared_defs.h"
 #include "surface.h"
-#include "surfaces/difuse_white.h"
+#include "surfaces/lambertian.h"
 #include "light.h"
 #include "lights/difuse_white_light.h"
 #include "transform.h"
@@ -125,11 +125,11 @@ static void load_transformation(struct json_object *obj, struct transform *t){
 static void load_surface(struct json_object *json, struct object *obj){
 	const char *surface = load_string(j_o_o_g(json, "surface"));
 
-	if(!strcmp(surface, "difuse_white")){
-		difuse_white_init(obj);
+	if(!strcmp(surface, "lambertian")){
+		lambertian_init(obj);
 	}else{
 		warning(0, "Unknown surface \"%s\". Ignoring.", surface);
-		difuse_white_init(obj);
+		lambertian_init(obj);
 	}
 }
 

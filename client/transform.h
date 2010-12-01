@@ -19,6 +19,7 @@ struct transform{
 void transform_invert(const struct transform *t, struct transform *ret);
 
 void transform_identity(struct transform *t);
+void transform_make_orthonormal_basis(struct transform *t, vector_t v);
 
 void transform_print(const struct transform *t);
 

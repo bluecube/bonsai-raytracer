@@ -94,6 +94,41 @@ void transform_identity(struct transform *t){
 }
 
 /**
+ * Fills rows of transformation t with orthonormal
+ * basis of a space that transforms the Z axis to vector v.
+ * The other two rows are chosen in some weird (but deterministic) way.
+ * Assumes that v is already normalized.
+ * \todo Refactor, measure and optimize.
+ */
+void transform_make_orthonormal_basis(struct transform *t, vector_t v){
+	vector_t basex;
+
+	// Test to see if the vector (1, 0 ,0) is too close to v.
+	// v.x > 0.86 translates approximately to
+	// vector_dot(v, vector_set(1, 0, 0)) > cos(PI/6)
+	if(v.x > 0.86){
+		basex = vector_set(0, 0, 1);
+	}else{
+		basex = vector_set(1, 0, 0);
+	}
+
+	vector_t basey = vector_set(
+		v.y * basex.z - v.z * basex.y,
+		v.z * basex.x - v.x * basex.z,
+		v.x * basex.y - v.y * basex.x);
+
+	basex = vector_set(
+		v.y * basey.z - v.z * basey.y,
+		v.z * basey.x - v.x * basey.z,
+		v.x * basey.y - v.y * basey.x);
+	
+	t->row[0] = basex;
+	t->row[1] = basey;
+	t->row[2] = v;
+	t->row[3] = vector_set(0, 0, 0);
+}
+
+/**
  * Pretty printing of transformation matrices for debugging purposes.
  */
 void transform_print(const struct transform *t){
