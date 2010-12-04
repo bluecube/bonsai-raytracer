@@ -41,6 +41,7 @@ static struct outgoing_direction sample(vector_t point, wavelength_t wavelength,
 		len = vector_length_squared(ret.direction);
 		dot = vector_dot(ret.direction, normal);
 	}while(len > 1 || dot < 0);
+	len = sqrt(len);
 	vector_multiply(ret.direction, 1 / len);
 	ret.weight = 2 * dot;
 

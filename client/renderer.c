@@ -14,6 +14,33 @@
 #define MAX_DEPTH 16
 
 /**
+ * Pointer to a light source.
+ * \todo This is part of an ugly hack and should either
+ * go through some massive refactoring or be removed completely.
+ */
+static struct object *light;
+
+/**
+ * Sample a point on a light source.
+ * Returns point in camera coordinates.
+ * \todo This is part of an ugly hack and should either
+ * go through some massive refactoring or be removed completely.
+ */
+static vector_t sample_light(){
+	vector_t position;
+	float len;
+	do{
+		position.x = random_number(-1, 1);
+		position.y = random_number(-1, 1);
+		position.z = random_number(-1, 1);
+
+		len = vector_length_squared(position);
+	}while(len > 1);
+
+	return vector_transform(position, &(light->transform));
+}
+
+/**
  * Render a single ray from a camera.
  * \param s Scene to render.
  * \param r Ray being cast.
@@ -21,7 +48,7 @@
  * \param depth How deep are we in the recursion?
  * \return Energy of the ray.
  */
-static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavelength, int depth){
+static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavelength, int depth, bool *hitLight){
 	if(depth > MAX_DEPTH){
 		return 0;
 	}
@@ -47,21 +74,62 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 		return 0;
 	return dot;
 #else
-	float energy = 0;
-
 	/// \todo Surface properties shouldn't be in camera space.
 
-	if(object_is_light_source(obj)){
+	float energy = 0; // the resulting energy 
+
+	*hitLight = object_is_light_source(obj);
+	if(*hitLight){
 		energy = (obj->light.energy)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction);
 	}
 
+	// cast the two other rays - BRDF and DLS:
+
+	// BRDF ray:
+	float brdfEnergy = 0;
+	bool brdfHitLight = false;
+	struct ray brdfRay;
+
 	struct outgoing_direction sample =
 		(obj->surface.sample)(pointInCameraSpace, wavelength, normalInCameraSpace, r->direction);
+	ray_from_direction(&brdfRay, pointInCameraSpace, sample.direction);
+	brdfEnergy = sample.weight * render_ray(s, &brdfRay, wavelength, depth + 1, &brdfHitLight);
 
-	struct ray newRay;
-	ray_from_direction(&newRay, pointInCameraSpace, sample.direction);
+	// DLS ray:
+	float dlsEnergy;
+	bool dlsHitLight;
+	struct ray dlsRay;
 
-	energy += sample.weight * render_ray(s, &newRay, wavelength, depth + 1);
+	vector_t dlsSample = sample_light();
+	ray_from_points(&dlsRay, pointInCameraSpace, dlsSample);
+	distance = kd_tree_ray_intersection(&(s->tree), &dlsRay, 0, INFINITY, &obj);
+	vector_t lightPointInCameraSpace = vector_add(dlsRay.origin, vector_multiply(dlsRay.direction, distance));
+	dlsHitLight = object_is_light_source(obj) &&
+		(distance + 0.001 >= vector_length(vector_substract(dlsSample, lightPointInCameraSpace)));
+		
+	if(dlsHitLight){
+		float weight = vector_dot(dlsRay.direction, normalInCameraSpace) / (distance * distance);
+		if(weight < 0){
+			weight = 0;
+		}
+		dlsEnergy = weight * (obj->light.energy)(dlsSample, wavelength, vector_set(0, 0, 0), dlsRay.direction);
+			// the normal (zero vector) is unused in this implementation so i don't calculate it
+	}
+
+	// now there is dlsRay with dlsEnergy and brdfRay with brdfEnergy
+
+	float brdfProb = 1 / (2 * 3.1415926);
+	float dlsProb = distance / (2 * 3.1415926);
+
+	if(dlsHitLight){
+		energy += dlsEnergy * dlsProb / (dlsProb + brdfProb);
+	}
+	
+	if(brdfHitLight){
+		energy += brdfEnergy * brdfProb / (dlsProb + brdfProb);
+	}else{
+		energy += brdfEnergy;
+	}
 
 	return energy;
 #endif
@@ -84,6 +152,11 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 	float yy = inc * ((float)(s->height) / 2 - chunk->top);
 
 	float focus = s->focus / s->focalLength;
+
+	// another part of ugly hack here:
+	struct ray tmpRay;
+	ray_from_direction(&tmpRay, vector_set(0, 0, 0), vector_set(0, 0, s->focalLength));
+	kd_tree_ray_intersection(&(s->tree), &tmpRay, 0, INFINITY, &light);
 
 #if MEASUREMENTS_WITH_WARMUP
 	MEASUREMENTS_WARMUP();
@@ -117,7 +190,9 @@ void renderer_render(const struct scene *s, const struct renderer_chunk *chunk,
 				struct photon p;
 				photon_random_init(&p);
 
-				p.energy = render_ray(s, &r, p.wavelength, 0);
+				bool x;
+
+				p.energy = render_ray(s, &r, p.wavelength, 0, &x);
 
 				photon_add_to_color(&p, pixmap);
 #else
