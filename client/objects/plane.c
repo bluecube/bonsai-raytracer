@@ -17,7 +17,7 @@
  * \return Distance to the intersection (in object coordinates),
  * or NAN if there is no intersection in the interval.
  */
-float get_intersection(struct object *o, const struct ray *r,
+static float get_intersection(struct object *o, const struct ray *r,
 	float lowerBound, float upperBound){
 
 	(void)o;
@@ -38,7 +38,7 @@ static vector_t get_normal(struct object *o, vector_t pt){
 
 /**
  * Calculate the minimum bounding box.
- * \todo Comparisons floats?
+ * \todo Better comparison of floats?
  */
 static void get_bounding_box(const struct transform *t, struct bounding_box *b){
 	vector_t transformedNormal = vector_transform_direction(PLANE_NORMAL, t);
