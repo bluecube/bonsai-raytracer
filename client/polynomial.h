@@ -9,8 +9,11 @@
 float inside_interval(float val, float lowerBound, float upperBound);
 
 unsigned quadratic_solve(const float coefs[], float roots[]);
-
 float quadratic_first_root_in_interval(const float coefs[],
+	float lowerBound, float upperBound);
+
+unsigned cubic_solve(float coefs[], float roots[]);
+float cubic_first_root_in_interval(float coefs[],
 	float lowerBound, float upperBound);
 
 #endif

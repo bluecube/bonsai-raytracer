@@ -1,6 +1,6 @@
 {
 	"camera": {
-		"raysPerPx": 5000,
+		"raysPerPx": 500,
 		"position": [0, 2, -5],
 		"lookAt": [0, 1.5, 0],
 		"focalLength": 30e-3
