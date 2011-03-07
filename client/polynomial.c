@@ -2,13 +2,13 @@
  * Working with polynomials.
  * Polynomial is an array of floats, a[i] is the coefficient of \f$x^{degree - i}\f$.
  * Some of the functions are not static to make them simpler to test.
- * \todo This part needs more work.
- * \todo Vectorization, maybe?
  */
 
 #include "polynomial.h"
 
 #include <math.h>
+
+#include <gsl/gsl_poly.h>
 
 #include <util.h>
 
@@ -83,43 +83,6 @@ float quadratic_first_root_in_interval(const float coefs[],
 }
 
 /**
- * Remove a root from a polynomial (divide it by (x - root)).
- * \param coefs[in,out] Coefficients of the polynomial.
- * This is modified to contain the result.
- * \param degree Degree of the input polynomial.
- * \pre degree > 0
- * \param root The root of the polynomial to be removed (no checks are made).
- */
-void polynomial_deflate(float coefs[], size_t degree, float root){
-	for(unsigned i = 1; i < degree; ++i){
-		coefs[i] += coefs[i - 1] * root;
-	}
-}
-
-/**
- * Do one step of Newton's method.
- *
- * Calculates \f$estimate - \frac{p(estimate)}{p'(estimate)}\f$
- * \return Updated estimate.
- * \param[in] coefs Coefficients of the polynomial.
- * \param[in] degree Degree of the polynomial.
- * \param[in] estimate Old estimate of the root position.
- */
-float polynomial_newton_step(const float coefs[], size_t degree, float estimate){
-	float acc = 0;
-	float acc_deriv = 0;
-
-	for(unsigned i = 0; i < degree; ++i){
-		acc = coefs[i] + acc * estimate;
-		acc_deriv = (degree - i) * coefs[i] + acc_deriv * estimate;
-	}
-
-	acc = coefs[degree] + acc * estimate;
-
-	return estimate - acc / acc_deriv;
-}
-
-/**
  * Find roots of a polynomial.
  * \param[in,out] coefs Coefficients of the polynomial.
  * These values are destroyed during the computation.
@@ -128,27 +91,14 @@ float polynomial_newton_step(const float coefs[], size_t degree, float estimate)
  * \todo There may be some trouble with multiple roots.
  */
 unsigned cubic_solve(float coefs[], float roots[]){
-	unsigned found = 0;
-	unsigned degree = 3;
-
-	while(degree > 2){
-		float old_estimate = 0;
-		float estimate = polynomial_newton_step(coefs, degree, old_estimate);
-		
-		while(!IS_CLOSE(estimate, old_estimate)){
-			old_estimate = estimate;
-			estimate = polynomial_newton_step(coefs, degree, estimate);
-		}
-
-		roots[found] = estimate;
-		++found;
-
-		polynomial_deflate(coefs, degree, estimate);
-		--degree;
-
-	}
-
-	return found + quadratic_solve(coefs, found + roots);
+	double r1, r2, r3;
+	unsigned ret = gsl_poly_solve_cubic(
+		coefs[1] / coefs[0], coefs[2] / coefs[0], coefs[3] / coefs[0],
+		&r1, &r2, &r3);
+	
+	roots[0] = r1;
+	roots[1] = r2;
+	roots[2] = r3;
 }
 
 /**
