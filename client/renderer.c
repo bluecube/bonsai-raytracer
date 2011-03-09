@@ -42,6 +42,8 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 	vector_t normalInCameraSpace = vector_normalize(vector_transform_direction(normalInObjectSpace, &(obj->transform)));
 
 #if DOT_PRODUCT_SHADING
+	(void)wavelength;
+
 	float dot = -vector_dot(normalInCameraSpace, r->direction);
 	if(dot < 0)
 		return 0;
