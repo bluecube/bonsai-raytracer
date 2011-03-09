@@ -12,6 +12,9 @@ override LDFLAGS += -Wall -Wextra -lm
 override LDFLAGS += $(shell pkg-config --libs json)
 override CFLAGS += $(shell pkg-config --cflags json)
 
+override LDFLAGS += $(shell pkg-config --libs gsl)
+override CFLAGS += $(shell pkg-config --cflags gsl)
+
 # debug flag
 DEBUG=0
 ifneq ($(DEBUG),1)
