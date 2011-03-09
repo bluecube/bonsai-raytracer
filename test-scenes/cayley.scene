@@ -1,0 +1,13 @@
+{
+	"camera": {
+		"raysPerPx": 50,
+		"position": [0, 2, -10],
+		"lookAt": [0, 0, 0],
+		"focalLength": 30e-3
+	},
+	"objects": [
+		{
+			"type": "cayley"
+		}
+	]
+}

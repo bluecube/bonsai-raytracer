@@ -5,6 +5,7 @@
 
 #include "kd_tree.h"
 #include "object.h"
+#include "objects/cayley.h"
 #include "objects/sphere.h"
 #include "objects/plane.h"
 #include "shared_defs.h"
@@ -167,7 +168,9 @@ static void load_object(struct json_object *json, struct object *obj){
 
 	const char *type = load_string(j_o_o_g(json, "type"));
 	
-	if(!strcmp(type, "sphere")){
+	if(!strcmp(type, "cayley")){
+		cayley_init(obj, &t);
+	}else if(!strcmp(type, "sphere")){
 		sphere_init(obj, &t);
 	}else if(!strcmp(type, "plane")){
 		plane_init(obj, &t);
