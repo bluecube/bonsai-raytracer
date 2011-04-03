@@ -44,10 +44,7 @@ static float render_ray(const struct scene *s, struct ray *r, wavelength_t wavel
 #if DOT_PRODUCT_SHADING
 	(void)wavelength;
 
-	float dot = -vector_dot(normalInCameraSpace, r->direction);
-	if(dot < 0)
-		return 0;
-	return dot;
+	return fabsf(vector_dot(normalInCameraSpace, r->direction));
 #else
 	float energy = 0;
 
