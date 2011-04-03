@@ -24,10 +24,11 @@ float inside_interval(float val, float lowerBound, float upperBound){
 
 /**
  * Find real roots of a polynomial of degree 2.
- * \param[in] coefs Array of coefficients. Must have at least 3 fields,
+ * \param coefs Array of coefficients. Must have at least 3 fields,
  * coefs[i] is the coefficient of x^i.
- * \param[out] roots Array used for outputting the roots.
- * Must have at least two fields. Roots are returned in ascending degree.
+ * \param[out] roots Array used for outputting the roots. The resulting roots
+ * are in arbitrary order. Must have at least two fields.
+ * \note coefs and roots may alias.
  * \return number of roots (0, 1 or 2).
  */
 unsigned quadratic_solve(const float coefs[], float roots[]){
