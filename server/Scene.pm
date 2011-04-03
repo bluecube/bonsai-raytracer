@@ -37,6 +37,15 @@ my %objectTypes = (
 		$_->{'polygons'} = $ret->{'polygons'};
 	},
 
+	cayley => sub{
+		Math::MatrixReal->new_from_rows([
+			[1, 0, 0, 0],
+			[0, 1, 0, 0],
+			[0, 0, 1, 0],
+			[0, 0, 0, 1],
+			]);
+	},
+
 	sphere => sub{
 		my $r = 1;
 		$r = $_->{'r'} if defined($_->{'r'});

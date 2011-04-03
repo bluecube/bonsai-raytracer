@@ -2,24 +2,20 @@
 /* [ Created with wxMaxima version 0.8.2 ] */
 
 /* [wxMaxima: comment start ]
-wxMaxima 0.8.2 http://wxmaxima.sourceforge.net
-Maxima 5.18.1 http://maxima.sourceforge.net
-Using Lisp SBCL 1.0.19-gentoo
-Distributed under the GNU Public License. See the file COPYING.
-Dedicated to the memory of William Schelter.
-The function bug_report() provides bug reporting information.
+Cayley surface;
+3rd form from http://www.mathcurve.com/surfaces/cayley/cayley.shtml
    [wxMaxima: comment end   ] */
 
 /* [wxMaxima: input   start ] */
-cayley: 1 / x[0] + 1 / x[1] + 1 / x[2] + 1 / x[3] = 0;
+cayley: (x^2 + y^2 + z^2) + 2 * x * y * z - 1 = 0;
 /* [wxMaxima: input   end   ] */
 
-/* [wxMaxima: input   start ] */
-cayley2: expand(cayley * x[0]*x[1]*x[2]*x[3]);
-/* [wxMaxima: input   end   ] */
+/* [wxMaxima: comment start ]
+Ray intersection:
+   [wxMaxima: comment end   ] */
 
 /* [wxMaxima: input   start ] */
-eqn:expand(cayley2), x[0] = o[0] + t * d[0], x[1] = o[1] + t * d[1], x[2] = o[2] + t * d[2], x[3] = 1;
+eqn:expand(cayley), x = o[0] + t * d[0], y = o[1] + t * d[1], z = o[2] + t * d[2];
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -36,6 +32,22 @@ expand(coeff(lhs(eqn), t, 1));
 
 /* [wxMaxima: input   start ] */
 expand(coeff(lhs(eqn), t, 0));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: comment start ]
+Gradient (normal vector):
+   [wxMaxima: comment end   ] */
+
+/* [wxMaxima: input   start ] */
+diff(lhs(cayley), x, 1);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+diff(lhs(cayley), y, 1);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+diff(lhs(cayley), z, 1);
 /* [wxMaxima: input   end   ] */
 
 /* Maxima can't load/batch files which end with a comment! */
