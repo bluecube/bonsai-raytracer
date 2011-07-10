@@ -79,7 +79,9 @@ void transform_invert(const struct transform *t, struct transform *ret){
 		}
 	}
 
+	#if VECTOR_SIZE == 4
 	ret->row[3].f[3] = 1;
+	#endif
 }
 
 /**
@@ -132,15 +134,17 @@ void transform_make_orthonormal_basis(struct transform *t, vector_t v){
  * Pretty printing of transformation matrices for debugging purposes.
  */
 void transform_print(const struct transform *t){
+
+
 	printf("[");
-	for(int i = 0; i < 4; ++i){
+	for(unsigned i = 0; i < 4; ++i){
 		if(i != 0){
 			printf(" ");
 		}
 		printf("[");
-		for(int j = 0; j < 4; ++j){
+		for(unsigned j = 0; j < VECTOR_SIZE; ++j){
 			printf("%6.2f ", t->row[i].f[j]);
-			if(j != 3){
+			if(j != VECTOR_SIZE - 1){
 				printf(", ");
 			}
 		}

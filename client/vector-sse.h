@@ -12,6 +12,8 @@
 #include <emmintrin.h>
 #include <math.h>
 
+#define VECTOR_SIZE 4
+
 struct transform;
 
 /**
@@ -19,7 +21,7 @@ struct transform;
  * The w coordinate is mostly ignored.
  */
 typedef union{
-	float f[4];
+	float f[VECTOR_SIZE];
 	struct{
 		float x;
 		float y;

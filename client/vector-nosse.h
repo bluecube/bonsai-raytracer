@@ -9,13 +9,15 @@
 
 #include <math.h>
 
+#define VECTOR_SIZE 3
+
 struct transform;
 
 /**
  * 3D vector.
  */
 typedef union{
-	float f[3];
+	float f[VECTOR_SIZE];
 	struct{
 		float x;
 		float y;

@@ -29,7 +29,6 @@ vector_t vector_transform(vector_t v, const struct transform *t){
 	return ret;
 }
 
-
 /**
  * Transform a direction with a transformation.
  */

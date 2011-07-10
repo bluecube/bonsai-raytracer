@@ -13,7 +13,7 @@
 vector_t vector_add(vector_t v1, vector_t v2){
 	vector_t ret;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret.f[i] = v1.f[i] + v2.f[i];
 	}
 
@@ -26,7 +26,7 @@ vector_t vector_add(vector_t v1, vector_t v2){
 vector_t vector_substract(vector_t v1, vector_t v2){
 	vector_t ret;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret.f[i] = v1.f[i] - v2.f[i];
 	}
 
@@ -39,7 +39,7 @@ vector_t vector_substract(vector_t v1, vector_t v2){
 float vector_dot(vector_t v1, vector_t v2){
 	float ret = 0;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret += v1.f[i] * v2.f[i];
 	}
 
@@ -52,7 +52,7 @@ float vector_dot(vector_t v1, vector_t v2){
 float vector_length_squared(vector_t v){
 	float ret = 0;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret += v.f[i] * v.f[i];
 	}
 
@@ -65,7 +65,7 @@ float vector_length_squared(vector_t v){
 vector_t vector_multiply(vector_t v, float f){
 	vector_t ret;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret.f[i] = v.f[i] * f;
 	}
 
@@ -78,9 +78,9 @@ vector_t vector_multiply(vector_t v, float f){
 vector_t vector_transform(vector_t v, const struct transform *t){
 	vector_t ret;
 
-	for(int i = 0; i < 3; ++i){
-		ret.f[i] = t->row[3].f[i];
-		for(int j = 0; j < 3; ++j){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
+		ret.f[i] = t->row[VECTOR_SIZE].f[i];
+		for(int j = 0; j < VECTOR_SIZE; ++j){
 			ret.f[i] += v.f[j] * t->row[j].f[i];
 		}
 	}
@@ -95,9 +95,9 @@ vector_t vector_transform(vector_t v, const struct transform *t){
 vector_t vector_transform_direction(vector_t v, const struct transform *t){
 	vector_t ret;
 
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < VECTOR_SIZE; ++i){
 		ret.f[i] = 0;
-		for(int j = 0; j < 3; ++j){
+		for(int j = 0; j < VECTOR_SIZE; ++j){
 			ret.f[i] += v.f[j] * t->row[j].f[i];
 		}
 	}
@@ -109,7 +109,7 @@ vector_t vector_transform_direction(vector_t v, const struct transform *t){
  * Get a random point inside a circle using rejection sampling.
  * The circle lies in the Z plane and has radius r.
  */
-vector_t vector_random_in_circle(float r){
+vector_t vector_random_in_circle(){
 	float x, y;
 
 	do{
