@@ -33,7 +33,7 @@ struct kd_tree_node{
 		uint32_t first;
 	};
 	//uint32_t padding1, padding2;
-} __attribute__((packed));
+};
 
 /**
  * Leaf flag of the KD-tree.
