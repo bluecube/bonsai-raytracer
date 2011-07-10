@@ -33,33 +33,11 @@ static void get_bounding_box(const struct transform *t, struct bounding_box *b){
  * This function assumes that all the vectors in a ray have 1 in their w components.
  * \return Distance to the intersection (in object coordinates),
  * or NAN if there is no intersection in the interval.
- * \note In this function I added a sphere clipping that should
- * theoretically be done elsewhere (as a CSG operation) and differently,
- * but since CSG is not implemented yet ...
  */
 static float get_intersection(struct object *obj, const struct ray *r,
 	float lowerBound, float upperBound){
 
 	(void)obj;
-
-	float sphere[3];
-
-	sphere[0] = 1;
-	sphere[1] = 2 * vector_dot(r->origin, r->direction);
-	sphere[2] = vector_length_squared(r->origin) - 16;
-
-	if(quadratic_solve(sphere, sphere) != 2){
-		return NAN;
-	}
-
-	/* Intersecting the sphere interval and the original limiting interval. */
-	if(sphere[0] < sphere[1]){
-		lowerBound = fmaxf(lowerBound, sphere[0]);
-		upperBound = fminf(upperBound, sphere[1]);
-	}else{
-		lowerBound = fmaxf(lowerBound, sphere[1]);
-		upperBound = fminf(upperBound, sphere[0]);
-	}
 
 	float coefs[4];
 
