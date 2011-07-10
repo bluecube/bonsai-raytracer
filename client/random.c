@@ -9,7 +9,17 @@
 #include <emmintrin.h>
 #endif
 
-#if FLT_MANT_DIG == 24 && FLT_RADIX == 2 && !defined(DISABLE_FAST_RANDOM_NUMBER)
+#ifdef DISABLE_FAST_RANDOM_NUMBER
+
+/**
+ * Get random float from interval <#from, #to>.
+ * Fallback version.
+ */
+float random_number(float from, float to){
+	return random() * (to - from) / RAND_MAX + from;
+}
+
+#else
 
 union uint_to_float{
 	unsigned i;
@@ -27,22 +37,14 @@ static unsigned mirand = 1;
  * http://rgba.org/articles/sfrand/sfrand.htm
  */
 float random_number(float from, float to){
+	#if FLT_MANT_DIG != 24 && FLT_RADIX != 2
+	#error "Weird floats!"
+	#endif
+
 	mirand *= 16807;
 	union uint_to_float a;
 	a.i = (mirand & 0x007fffff) | 0x3f800000;
 	return (a.f - 1.0) * (to - from) + from;
-}
-
-#else
-
-#warning "Using fallback version of the random float generator."
-
-/**
- * Get random float from interval <#from, #to>.
- * Fallback version.
- */
-float random_number(float from, float to){
-	return random() * (to - from) / RAND_MAX + from;
 }
 
 #endif
@@ -54,7 +56,20 @@ int random_int(int from, int to){
 	return (random() % (to - from)) + from;
 }
 
+
 #ifndef DISABLE_SSE
+
+#ifdef DISABLE_FAST_RANDOM_NUMBER
+
+__m128 random_number2(){
+	return _mm_set_ps(0, random_number(0, 1), 0, random_number(0, 1));
+}
+
+void init_random(){
+
+}
+
+#else //DISABLE_FAST_RANDOM_NUMBER
 
 /** 
  * PRNG state for the SSE based 2 floats generator.
@@ -87,10 +102,12 @@ void init_random(){
 	mirand2 = _mm_set_epi32(0, 1, 0, 2);
 }
 
-#else
+#endif //DISABLE_FAST_RANDOM_NUMBER
+
+#else //DISABLE_SSE
 
 void init_random(){
 
 }
 
-#endif
+#endif //DISABLE_SSE
